@@ -8,6 +8,7 @@ export interface ConditionState {
   defenderStatus: Status;
   defenderLeechSeed: boolean;
   defenderBind: boolean;
+  defenderStealthRock: boolean;
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -20,6 +21,7 @@ export interface ConditionFormHandle {
   defenderStatusSelect: HTMLSelectElement;
   leechSeedCheck: HTMLInputElement;
   bindCheck: HTMLInputElement;
+  stealthRockCheck: HTMLInputElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -47,6 +49,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     defenderStatus: 'none',
     defenderLeechSeed: false,
     defenderBind: false,
+    defenderStealthRock: false,
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -65,6 +68,8 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   leechSeedCheck.type = 'checkbox';
   const bindCheck = document.createElement('input');
   bindCheck.type = 'checkbox';
+  const stealthRockCheck = document.createElement('input');
+  stealthRockCheck.type = 'checkbox';
 
   weatherSelect.addEventListener('change', () => {
     state.weather = weatherSelect.value as Weather;
@@ -102,6 +107,10 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     state.defenderBind = bindCheck.checked;
     onChange();
   });
+  stealthRockCheck.addEventListener('change', () => {
+    state.defenderStealthRock = stealthRockCheck.checked;
+    onChange();
+  });
 
   return {
     weatherSelect,
@@ -110,6 +119,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     defenderStatusSelect,
     leechSeedCheck,
     bindCheck,
+    stealthRockCheck,
     screenSelect,
     formatSelect,
     critCheck,

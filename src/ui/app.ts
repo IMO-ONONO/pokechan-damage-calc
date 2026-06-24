@@ -1,4 +1,5 @@
 import { calculateFullDamage } from '../calc/calculate';
+import { getTypeMultiplier } from '../calc/typeChart';
 import { loadGameData } from '../data/loader';
 import type { SavedPokemon } from '../data/savedPokemon';
 import { createConditionForm, type ConditionState } from './conditionForm';
@@ -127,6 +128,7 @@ export async function initApp(root: HTMLElement) {
   }
   addToggle('やどりぎ', conditionForm.leechSeedCheck);
   addToggle('バインド', conditionForm.bindCheck);
+  addToggle('ステロ', conditionForm.stealthRockCheck);
 
   pokeCondRow.appendChild(midCol);
 
@@ -358,23 +360,35 @@ export async function initApp(root: HTMLElement) {
     }
 
     // スリップダメージ表の更新
-    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond);
+    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond, dActive?.types ?? []);
   }
 
-  // 防御側のスリップを6ターン分（0T..5T）表示する。状態異常+やどりぎ+バインドを合算。
-  // やけど: 毎T floor(MaxHP/16) / どく: 毎T floor(MaxHP/8) / もうどく: floor(MaxHP × N / 16) を毎T累積
-  // やどりぎ・バインド: それぞれ毎T floor(MaxHP/8)
-  function updateSlipTable(maxHp: number, hpRatio: number, cond: ConditionState) {
+  // 防御側のスリップを6ターン分（0T..5T）表示する。状態異常+やどりぎ+バインドを合算、ステロは入場時のみ。
+  function updateSlipTable(
+    maxHp: number,
+    hpRatio: number,
+    cond: ConditionState,
+    defenderTypes: import('../data/types').PokemonType[],
+  ) {
     const status = cond.defenderStatus;
     const statusLabels: Record<string, string> = {
       burn: 'やけど(1/16)',
       poison: 'どく(1/8)',
       badpoison: 'もうどく(累積)',
     };
+    // ステロは岩タイプの相性倍率（×0.25〜×4）で 1/8 を掛ける
+    let stealthDmg = 0;
+    let stealthMult = 1;
+    if (cond.defenderStealthRock && defenderTypes.length > 0) {
+      stealthMult = getTypeMultiplier('rock', defenderTypes, data.typeChart.chart);
+      stealthDmg = Math.floor((maxHp * stealthMult) / 8);
+    }
+
     const parts: string[] = [];
     if (statusLabels[status]) parts.push(statusLabels[status]);
     if (cond.defenderLeechSeed) parts.push('やどりぎ(1/8)');
     if (cond.defenderBind) parts.push('バインド(1/8)');
+    if (cond.defenderStealthRock) parts.push(`ステロ(${stealthMult}×)`);
 
     if (parts.length === 0 || maxHp <= 0) {
       slipSection.style.display = 'none';
@@ -389,14 +403,13 @@ export async function initApp(root: HTMLElement) {
     const eighth = Math.max(1, Math.floor(maxHp / 8));
 
     function damageAtTurn(n: number): number {
-      let acc = 0;
-      // 状態異常
+      // ステロは入場時のみなので t>=0 で1回だけ加算（0Tで既に控除済みのHPを起点）
+      let acc = cond.defenderStealthRock ? stealthDmg : 0;
       if (status === 'burn') acc += burnTick * n;
       else if (status === 'poison') acc += eighth * n;
       else if (status === 'badpoison') {
         for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
       }
-      // やどりぎ・バインドは固定 1/8 × N
       if (cond.defenderLeechSeed) acc += eighth * n;
       if (cond.defenderBind) acc += eighth * n;
       return acc;
