@@ -1,0 +1,13 @@
+{
+  "id": "m-b",
+  "name": "レギュレーションM-B",
+  "period": {
+    "from": "2026-06-17",
+    "to": "2026-09-02"
+  },
+  "battleFormats": ["single", "double"],
+  "allowedPokemonNames": [],
+  "bannedItems": [],
+  "battleGimmicks": ["mega"],
+  "notes": "メガシンカ可、ダイマックス・テラスタル不可。メガシンカは1戦1回まで。使用可能ポケモンは319匹（通常242＋メガ77、新規追加22匹）。allowedPokemonNamesは後で攻略サイトから収集して埋める。"
+}
