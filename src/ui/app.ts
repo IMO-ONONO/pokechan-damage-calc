@@ -199,11 +199,11 @@ export async function initApp(root: HTMLElement) {
   ];
   for (const c of ivCells) sgrid.appendChild(c);
 
-  // row3 努力値
+  // row3 能力ポイント
   const evCells = [
     atkCells.attack.evEl,
     atkCells.spAttack.evEl,
-    makeLabel('努力値'),
+    makeLabel('能力P'),
     defCells.hp.evEl,
     defCells.defense.evEl,
     defCells.spDefense.evEl,

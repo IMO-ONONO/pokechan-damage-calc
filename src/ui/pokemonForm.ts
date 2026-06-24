@@ -242,8 +242,8 @@ export function createPokemonForm(
     evEl.type = 'number';
     evEl.className = 'sg-input';
     evEl.min = '0';
-    evEl.max = '252';
-    evEl.step = '4';
+    evEl.max = '32';
+    evEl.step = '1';
     evEl.value = '0';
 
     const actualEl = document.createElement('div');
@@ -267,7 +267,7 @@ export function createPokemonForm(
       onChange();
     });
     evEl.addEventListener('change', () => {
-      state.evs[key] = Math.max(0, Math.min(252, parseInt(evEl.value, 10) || 0));
+      state.evs[key] = Math.max(0, Math.min(32, parseInt(evEl.value, 10) || 0));
       refreshActuals();
       onChange();
     });

@@ -53,17 +53,19 @@ export function calculateStats(
   level: number,
   nature: Nature,
 ): Stats {
+  // ポケモンチャンピオンズの式：従来の floor(EV/4) を AP×2 に置き換える（AP=能力ポイント）。
+  // HP: floor((種族×2 + IV + AP×2) × Lv/100) + Lv + 10
+  // 他: floor(floor((種族×2 + IV + AP×2) × Lv/100 + 5) × 性格補正)
   const nat = NATURE_TABLE[nature];
   const compute = (key: keyof Stats): number => {
     const base = baseStats[key];
     const iv = ivs[key];
-    const ev = evs[key];
+    const ap = evs[key];
+    const common = Math.floor(((base * 2 + iv + ap * 2) * level) / 100);
     if (key === 'hp') {
-      return (
-        Math.floor(((base * 2 + iv + Math.floor(ev / 4)) * level) / 100) + level + 10
-      );
+      return common + level + 10;
     }
-    let raw = Math.floor(((base * 2 + iv + Math.floor(ev / 4)) * level) / 100) + 5;
+    let raw = common + 5;
     if (nat.up === key) raw = Math.floor(raw * 1.1);
     else if (nat.down === key) raw = Math.floor(raw * 0.9);
     return raw;

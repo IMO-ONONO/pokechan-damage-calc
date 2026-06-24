@@ -184,7 +184,7 @@ export function createRegistrationPage(
   statsBlock.className = 'reg-stats';
   const head = document.createElement('div');
   head.className = 'reg-stats-head';
-  head.innerHTML = '<span></span><span>個体値</span><span>努力値</span>';
+  head.innerHTML = '<span></span><span>個体値</span><span>能力ポイント</span>';
   statsBlock.appendChild(head);
 
   for (const k of STAT_KEYS) {
@@ -202,8 +202,8 @@ export function createRegistrationPage(
     const ev = document.createElement('input');
     ev.type = 'number';
     ev.min = '0';
-    ev.max = '252';
-    ev.step = '4';
+    ev.max = '32';
+    ev.step = '1';
     ev.value = '0';
     ev.addEventListener('input', updateEvTotal);
     evInputs[k] = ev;
@@ -220,8 +220,8 @@ export function createRegistrationPage(
       (s, k) => s + (parseInt(evInputs[k].value, 10) || 0),
       0,
     );
-    evTotal.textContent = `努力値合計 ${total} / 510`;
-    evTotal.classList.toggle('over', total > 510);
+    evTotal.textContent = `能力ポイント合計 ${total} / 66`;
+    evTotal.classList.toggle('over', total > 66);
   }
 
   // ── わざ4つ ──
@@ -327,7 +327,7 @@ export function createRegistrationPage(
     const evs = {} as EVs;
     for (const k of STAT_KEYS) {
       ivs[k] = Math.max(0, Math.min(31, parseInt(ivInputs[k].value, 10) || 0));
-      evs[k] = Math.max(0, Math.min(252, parseInt(evInputs[k].value, 10) || 0));
+      evs[k] = Math.max(0, Math.min(32, parseInt(evInputs[k].value, 10) || 0));
     }
     const label = labelInput.value.trim() || base.displayJa || base.name;
     return {
