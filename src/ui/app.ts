@@ -1,7 +1,7 @@
 import { calculateFullDamage } from '../calc/calculate';
 import { loadGameData } from '../data/loader';
 import type { SavedPokemon } from '../data/savedPokemon';
-import { createConditionForm } from './conditionForm';
+import { createConditionForm, type ConditionState } from './conditionForm';
 import { createMoveSlot, type MoveSlotHandle } from './moveForm';
 import {
   clonePokeState,
@@ -114,6 +114,19 @@ export async function initApp(root: HTMLElement) {
   critSpan.textContent = ' 急所';
   critLabel.appendChild(critSpan);
   midCol.appendChild(critLabel);
+
+  // 防御側の追加スリップ（やどりぎ・バインド）
+  function addToggle(label: string, input: HTMLInputElement) {
+    const lab = document.createElement('label');
+    lab.className = 'cond-row toggle';
+    lab.appendChild(input);
+    const span = document.createElement('span');
+    span.textContent = ` ${label}`;
+    lab.appendChild(span);
+    midCol.appendChild(lab);
+  }
+  addToggle('やどりぎ', conditionForm.leechSeedCheck);
+  addToggle('バインド', conditionForm.bindCheck);
 
   pokeCondRow.appendChild(midCol);
 
@@ -345,35 +358,47 @@ export async function initApp(root: HTMLElement) {
     }
 
     // スリップダメージ表の更新
-    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond.defenderStatus);
+    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond);
   }
 
-  // 防御側のスリップを6ターン分（0T..5T）表示する。スリップ無しの状態異常では非表示。
+  // 防御側のスリップを6ターン分（0T..5T）表示する。状態異常+やどりぎ+バインドを合算。
   // やけど: 毎T floor(MaxHP/16) / どく: 毎T floor(MaxHP/8) / もうどく: floor(MaxHP × N / 16) を毎T累積
-  function updateSlipTable(maxHp: number, hpRatio: number, status: string) {
-    const labels: Record<string, string> = {
-      burn: 'やけど（毎T 1/16）',
-      poison: 'どく（毎T 1/8）',
-      badpoison: 'もうどく（1/16ずつ増加）',
+  // やどりぎ・バインド: それぞれ毎T floor(MaxHP/8)
+  function updateSlipTable(maxHp: number, hpRatio: number, cond: ConditionState) {
+    const status = cond.defenderStatus;
+    const statusLabels: Record<string, string> = {
+      burn: 'やけど(1/16)',
+      poison: 'どく(1/8)',
+      badpoison: 'もうどく(累積)',
     };
-    const label = labels[status];
-    if (!label || maxHp <= 0) {
+    const parts: string[] = [];
+    if (statusLabels[status]) parts.push(statusLabels[status]);
+    if (cond.defenderLeechSeed) parts.push('やどりぎ(1/8)');
+    if (cond.defenderBind) parts.push('バインド(1/8)');
+
+    if (parts.length === 0 || maxHp <= 0) {
       slipSection.style.display = 'none';
       return;
     }
     slipSection.style.display = '';
-    slipTitle.textContent = `スリップ ${label}`;
+    slipTitle.textContent = `スリップ ${parts.join(' + ')}`;
     slipGrid.innerHTML = '';
 
     const currentHp = Math.floor(maxHp * hpRatio);
     const burnTick = Math.max(1, Math.floor(maxHp / 16));
-    const poisonTick = Math.max(1, Math.floor(maxHp / 8));
+    const eighth = Math.max(1, Math.floor(maxHp / 8));
+
     function damageAtTurn(n: number): number {
-      if (status === 'burn') return burnTick * n;
-      if (status === 'poison') return poisonTick * n;
-      // もうどくは N=1,2,3,...で floor(MaxHP × N / 16) を累積
       let acc = 0;
-      for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
+      // 状態異常
+      if (status === 'burn') acc += burnTick * n;
+      else if (status === 'poison') acc += eighth * n;
+      else if (status === 'badpoison') {
+        for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
+      }
+      // やどりぎ・バインドは固定 1/8 × N
+      if (cond.defenderLeechSeed) acc += eighth * n;
+      if (cond.defenderBind) acc += eighth * n;
       return acc;
     }
 

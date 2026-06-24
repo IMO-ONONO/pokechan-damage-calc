@@ -6,6 +6,8 @@ export interface ConditionState {
   field: Field;
   attackerStatus: Status;
   defenderStatus: Status;
+  defenderLeechSeed: boolean;
+  defenderBind: boolean;
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -16,6 +18,8 @@ export interface ConditionFormHandle {
   fieldSelect: HTMLSelectElement;
   statusSelect: HTMLSelectElement;
   defenderStatusSelect: HTMLSelectElement;
+  leechSeedCheck: HTMLInputElement;
+  bindCheck: HTMLInputElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -41,6 +45,8 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     field: 'none',
     attackerStatus: 'none',
     defenderStatus: 'none',
+    defenderLeechSeed: false,
+    defenderBind: false,
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -55,6 +61,10 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
 
   const critCheck = document.createElement('input');
   critCheck.type = 'checkbox';
+  const leechSeedCheck = document.createElement('input');
+  leechSeedCheck.type = 'checkbox';
+  const bindCheck = document.createElement('input');
+  bindCheck.type = 'checkbox';
 
   weatherSelect.addEventListener('change', () => {
     state.weather = weatherSelect.value as Weather;
@@ -84,12 +94,22 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     state.isCritical = critCheck.checked;
     onChange();
   });
+  leechSeedCheck.addEventListener('change', () => {
+    state.defenderLeechSeed = leechSeedCheck.checked;
+    onChange();
+  });
+  bindCheck.addEventListener('change', () => {
+    state.defenderBind = bindCheck.checked;
+    onChange();
+  });
 
   return {
     weatherSelect,
     fieldSelect,
     statusSelect,
     defenderStatusSelect,
+    leechSeedCheck,
+    bindCheck,
     screenSelect,
     formatSelect,
     critCheck,
