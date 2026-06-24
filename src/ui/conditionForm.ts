@@ -5,6 +5,7 @@ export interface ConditionState {
   weather: Weather;
   field: Field;
   attackerStatus: Status;
+  defenderStatus: Status;
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -14,6 +15,7 @@ export interface ConditionFormHandle {
   weatherSelect: HTMLSelectElement;
   fieldSelect: HTMLSelectElement;
   statusSelect: HTMLSelectElement;
+  defenderStatusSelect: HTMLSelectElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -38,6 +40,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     weather: 'none',
     field: 'none',
     attackerStatus: 'none',
+    defenderStatus: 'none',
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -46,6 +49,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   const weatherSelect = makeSelect(WEATHERS);
   const fieldSelect = makeSelect(FIELDS);
   const statusSelect = makeSelect(STATUSES);
+  const defenderStatusSelect = makeSelect(STATUSES);
   const screenSelect = makeSelect(SCREENS);
   const formatSelect = makeSelect(FORMATS);
 
@@ -62,6 +66,10 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   });
   statusSelect.addEventListener('change', () => {
     state.attackerStatus = statusSelect.value as Status;
+    onChange();
+  });
+  defenderStatusSelect.addEventListener('change', () => {
+    state.defenderStatus = defenderStatusSelect.value as Status;
     onChange();
   });
   screenSelect.addEventListener('change', () => {
@@ -81,6 +89,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     weatherSelect,
     fieldSelect,
     statusSelect,
+    defenderStatusSelect,
     screenSelect,
     formatSelect,
     critCheck,

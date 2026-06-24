@@ -1,5 +1,5 @@
-import { DEFAULT_IVS, ZERO_EVS } from '../calc/stats';
-import { buildDisplayJa, isPickablePokemon, type GameData } from '../data/loader';
+import { calculateStats, DEFAULT_IVS, ZERO_EVS } from '../calc/stats';
+import { isPickablePokemon, type GameData } from '../data/loader';
 import {
   deleteSaved,
   loadSaved,
@@ -176,15 +176,16 @@ export function createRegistrationPage(
   form.appendChild(makeRow('特性', abilitySelect));
   form.appendChild(makeRow('持ち物', itemInput));
 
-  // ── 個体値 / 努力値 ──
+  // ── 個体値 / 能力ポイント / 実数値 ──
   const ivInputs: Record<string, HTMLInputElement> = {};
   const evInputs: Record<string, HTMLInputElement> = {};
+  const actualEls: Record<string, HTMLElement> = {};
 
   const statsBlock = document.createElement('div');
   statsBlock.className = 'reg-stats';
   const head = document.createElement('div');
   head.className = 'reg-stats-head';
-  head.innerHTML = '<span></span><span>個体値</span><span>能力ポイント</span>';
+  head.innerHTML = '<span></span><span>個体値</span><span>能力P</span><span>実数値</span>';
   statsBlock.appendChild(head);
 
   for (const k of STAT_KEYS) {
@@ -198,6 +199,7 @@ export function createRegistrationPage(
     iv.min = '0';
     iv.max = '31';
     iv.value = '31';
+    iv.addEventListener('input', updateActuals);
     ivInputs[k] = iv;
     const ev = document.createElement('input');
     ev.type = 'number';
@@ -205,9 +207,16 @@ export function createRegistrationPage(
     ev.max = '32';
     ev.step = '1';
     ev.value = '0';
-    ev.addEventListener('input', updateEvTotal);
+    ev.addEventListener('input', () => {
+      updateEvTotal();
+      updateActuals();
+    });
     evInputs[k] = ev;
-    row.append(lbl, iv, ev);
+    const actual = document.createElement('span');
+    actual.className = 'reg-stat-actual';
+    actual.textContent = '-';
+    actualEls[k] = actual;
+    row.append(lbl, iv, ev, actual);
     statsBlock.appendChild(row);
   }
   const evTotal = document.createElement('div');
@@ -222,6 +231,25 @@ export function createRegistrationPage(
     );
     evTotal.textContent = `能力ポイント合計 ${total} / 66`;
     evTotal.classList.toggle('over', total > 66);
+  }
+
+  // 現在の入力値から実数値を計算して表示。種族未選択時は「-」
+  function updateActuals() {
+    const name = activePokemonName();
+    const p = name ? data.pokemonByName.get(name) : null;
+    if (!p) {
+      for (const k of STAT_KEYS) actualEls[k].textContent = '-';
+      return;
+    }
+    const ivs = {} as IVs;
+    const evs = {} as EVs;
+    for (const k of STAT_KEYS) {
+      ivs[k] = Math.max(0, Math.min(31, parseInt(ivInputs[k].value, 10) || 0));
+      evs[k] = Math.max(0, Math.min(32, parseInt(evInputs[k].value, 10) || 0));
+    }
+    const lv = Math.max(1, Math.min(100, parseInt(levelInput.value, 10) || 50));
+    const stats = calculateStats(p.baseStats, ivs, evs, lv, natureSelect.value as Nature);
+    for (const k of STAT_KEYS) actualEls[k].textContent = String(stats[k]);
   }
 
   // ── わざ4つ ──
@@ -315,8 +343,14 @@ export function createRegistrationPage(
     megaSelect.value = '';
     refreshMega();
     refreshAbilities();
+    updateActuals();
   });
-  megaSelect.addEventListener('change', () => refreshAbilities());
+  megaSelect.addEventListener('change', () => {
+    refreshAbilities();
+    updateActuals();
+  });
+  levelInput.addEventListener('input', updateActuals);
+  natureSelect.addEventListener('change', updateActuals);
 
   function collect(): SavedPokemon | null {
     const base = data.pokemonByDisplayJa.get(speciesInput.value.trim());
@@ -359,6 +393,7 @@ export function createRegistrationPage(
       evInputs[k].value = String(ZERO_EVS[k]);
     }
     updateEvTotal();
+    updateActuals();
     for (const mf of moveFields) mf.setName(null);
     labelInput.value = '';
     saveBtn.textContent = '保存';
@@ -381,6 +416,7 @@ export function createRegistrationPage(
       evInputs[k].value = String(s.evs[k]);
     }
     updateEvTotal();
+    updateActuals();
     moveFields.forEach((mf, i) => mf.setName(s.moves?.[i] ?? null));
     labelInput.value = s.label;
     saveBtn.textContent = '更新';
@@ -468,6 +504,7 @@ export function createRegistrationPage(
   }
 
   updateEvTotal();
+  updateActuals();
   renderList();
 
   return { element: root, refresh: renderList };

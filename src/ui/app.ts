@@ -102,7 +102,8 @@ export async function initApp(root: HTMLElement) {
   }
   addCondRow('天候', conditionForm.weatherSelect);
   addCondRow('フィールド', conditionForm.fieldSelect);
-  addCondRow('状態', conditionForm.statusSelect);
+  addCondRow('攻状態', conditionForm.statusSelect);
+  addCondRow('防状態', conditionForm.defenderStatusSelect);
   addCondRow('壁', conditionForm.screenSelect);
   addCondRow('形式', conditionForm.formatSelect);
 
@@ -235,6 +236,18 @@ export async function initApp(root: HTMLElement) {
   statsSection.appendChild(sgrid);
   calcView.appendChild(statsSection);
 
+  // 5c. スリップダメージのターン経過シミュレーション（防御側状態異常がある時のみ表示）
+  const slipSection = document.createElement('section');
+  slipSection.className = 'slip-section card';
+  slipSection.style.display = 'none';
+  const slipTitle = document.createElement('div');
+  slipTitle.className = 'slip-title';
+  slipSection.appendChild(slipTitle);
+  const slipGrid = document.createElement('div');
+  slipGrid.className = 'slip-grid';
+  slipSection.appendChild(slipGrid);
+  calcView.appendChild(slipSection);
+
   // 5b. 登録ページ（別ビュー）
   const regPage = createRegistrationPage(data);
   const regView = document.createElement('div');
@@ -329,6 +342,58 @@ export async function initApp(root: HTMLElement) {
         defenderMaxHp: dStats.hp,
         defenderCurrentHp: Math.floor(dStats.hp * dState.hpRatio),
       });
+    }
+
+    // スリップダメージ表の更新
+    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond.defenderStatus);
+  }
+
+  // 防御側のスリップを6ターン分（0T..5T）表示する。スリップ無しの状態異常では非表示。
+  // やけど: 毎T floor(MaxHP/16) / どく: 毎T floor(MaxHP/8) / もうどく: floor(MaxHP × N / 16) を毎T累積
+  function updateSlipTable(maxHp: number, hpRatio: number, status: string) {
+    const labels: Record<string, string> = {
+      burn: 'やけど（毎T 1/16）',
+      poison: 'どく（毎T 1/8）',
+      badpoison: 'もうどく（1/16ずつ増加）',
+    };
+    const label = labels[status];
+    if (!label || maxHp <= 0) {
+      slipSection.style.display = 'none';
+      return;
+    }
+    slipSection.style.display = '';
+    slipTitle.textContent = `スリップ ${label}`;
+    slipGrid.innerHTML = '';
+
+    const currentHp = Math.floor(maxHp * hpRatio);
+    const burnTick = Math.max(1, Math.floor(maxHp / 16));
+    const poisonTick = Math.max(1, Math.floor(maxHp / 8));
+    function damageAtTurn(n: number): number {
+      if (status === 'burn') return burnTick * n;
+      if (status === 'poison') return poisonTick * n;
+      // もうどくは N=1,2,3,...で floor(MaxHP × N / 16) を累積
+      let acc = 0;
+      for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
+      return acc;
+    }
+
+    for (let t = 0; t <= 5; t++) {
+      const dmg = damageAtTurn(t);
+      const hp = Math.max(0, currentHp - dmg);
+      const cell = document.createElement('div');
+      cell.className = 'slip-cell';
+      const head = document.createElement('div');
+      head.className = 'slip-cell-head';
+      head.textContent = `${t}T`;
+      const val = document.createElement('div');
+      val.className = 'slip-cell-hp';
+      val.textContent = `${hp}/${maxHp}`;
+      const delta = document.createElement('div');
+      delta.className = 'slip-cell-delta';
+      delta.textContent = t === 0 ? '-' : `-${dmg}`;
+      if (hp === 0) cell.classList.add('slip-cell-ko');
+      cell.append(head, val, delta);
+      slipGrid.appendChild(cell);
     }
   }
 
