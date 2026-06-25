@@ -1,6 +1,6 @@
 import type { FullDamageResult } from '../calc/calculate';
 import type { GameData } from '../data/loader';
-import type { MoveData } from '../data/types';
+import type { MoveData, PokemonType } from '../data/types';
 import { TYPE_COLORS } from './typeColors';
 
 export interface MoveSlotHandle {
@@ -13,6 +13,9 @@ export interface MoveSlotHandle {
       defenderMaxHp: number;
       defenderCurrentHp: number;
       message?: string;
+      // 天候連動などで実際に使われたタイプ・威力（ウェザーボール等）
+      effectiveType?: PokemonType;
+      effectivePower?: number;
     } | null,
   ) => void;
   clear: () => void;
@@ -109,9 +112,11 @@ export function createMoveSlot(
   row.appendChild(right);
 
   // ── オートコンプリート ──
-  function renderDetail(m: MoveData) {
+  function renderDetail(m: MoveData, override?: { type: PokemonType; power: number }) {
     moveInfo.innerHTML = '';
-    const c = TYPE_COLORS[m.type];
+    const effType = override?.type ?? m.type;
+    const effPower = override?.power ?? m.power;
+    const c = TYPE_COLORS[effType];
     const chip = document.createElement('span');
     chip.className = 'type-chip-mini';
     chip.style.background = c.bg;
@@ -119,7 +124,9 @@ export function createMoveSlot(
     chip.textContent = c.ja;
     moveInfo.appendChild(chip);
     const txt = document.createElement('span');
-    txt.textContent = ` ${m.category === 'physical' ? '物理' : m.category === 'special' ? '特殊' : '変化'} 威${m.power ?? '-'} 命${m.accuracy ?? '-'}`;
+    const catLabel = m.category === 'physical' ? '物理' : m.category === 'special' ? '特殊' : '変化';
+    const suffix = override ? '（天候連動）' : '';
+    txt.textContent = ` ${catLabel} 威${effPower ?? '-'} 命${m.accuracy ?? '-'}${suffix}`;
     moveInfo.appendChild(txt);
   }
 
@@ -191,8 +198,18 @@ export function createMoveSlot(
       defenderMaxHp: number;
       defenderCurrentHp: number;
       message?: string;
+      effectiveType?: PokemonType;
+      effectivePower?: number;
     } | null,
   ) {
+    // 動的タイプ・威力が指定されていれば moveInfo 表示を上書き
+    if (selected) {
+      if (payload?.effectiveType !== undefined && payload?.effectivePower !== undefined) {
+        renderDetail(selected, { type: payload.effectiveType, power: payload.effectivePower });
+      } else {
+        renderDetail(selected);
+      }
+    }
     if (!payload || !payload.result) {
       // リセット
       hbtRem.style.width = '100%';

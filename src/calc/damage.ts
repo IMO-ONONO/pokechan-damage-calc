@@ -23,6 +23,7 @@ export function applyModifiersAndRoll(
   modifiers: number,
   randPercent: number,
 ): number {
+  if (modifiers === 0) return 0;
   const withMod = Math.floor(base * modifiers);
   return Math.max(1, Math.floor((withMod * randPercent) / 100));
 }

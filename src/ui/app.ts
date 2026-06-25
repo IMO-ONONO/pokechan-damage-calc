@@ -1,4 +1,5 @@
 import { calculateFullDamage } from '../calc/calculate';
+import { resolveDynamicMove } from '../calc/dynamicMove';
 import { isWeatherSlipped } from '../calc/modifiers';
 import { getTypeMultiplier } from '../calc/typeChart';
 import { loadGameData } from '../data/loader';
@@ -382,15 +383,17 @@ export async function initApp(root: HTMLElement) {
         });
         continue;
       }
+      // 動的タイプ・威力解決（ウェザーボール等）
+      const resolved = resolveDynamicMove(move, cond.weather);
       const result = calculateFullDamage({
         level: aState.level,
-        movePower: move.power,
+        movePower: resolved.power,
         attackerStats: aStats,
         defenderStats: dStats,
         attackerStages: aState.stages,
         defenderStages: dState.stages,
         context: {
-          moveType: move.type,
+          moveType: resolved.type,
           category: move.category,
           attackerTypes: aActive.types,
           defenderTypes: dActive.types,
@@ -413,6 +416,8 @@ export async function initApp(root: HTMLElement) {
         result,
         defenderMaxHp: dStats.hp,
         defenderCurrentHp: Math.floor(dStats.hp * dState.hpRatio),
+        effectiveType: resolved.changed ? resolved.type : undefined,
+        effectivePower: resolved.changed ? resolved.power : undefined,
       });
     }
 
