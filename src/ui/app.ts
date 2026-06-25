@@ -18,18 +18,22 @@ export async function initApp(root: HTMLElement) {
   const data = await loadGameData('m-b');
   root.innerHTML = '';
 
-  // 2. タブナビ + 2ビュー
+  // 2. タブナビ + 3ビュー
   const nav = document.createElement('div');
   nav.className = 'tab-nav';
   const calcTab = document.createElement('button');
   calcTab.type = 'button';
   calcTab.className = 'tab-btn active';
   calcTab.textContent = 'ダメージ計算';
+  const condTab = document.createElement('button');
+  condTab.type = 'button';
+  condTab.className = 'tab-btn';
+  condTab.textContent = '場の条件';
   const regTab = document.createElement('button');
   regTab.type = 'button';
   regTab.className = 'tab-btn';
   regTab.textContent = 'ポケモン登録';
-  nav.append(calcTab, regTab);
+  nav.append(calcTab, condTab, regTab);
   root.appendChild(nav);
 
   const calcView = document.createElement('div');
@@ -91,44 +95,36 @@ export async function initApp(root: HTMLElement) {
   });
   midCol.appendChild(swapBtn);
 
-  // 条件コントロールをラベル付きrowとして追加
-  function addCondRow(label: string, ctrl: HTMLElement) {
+  // 急所と形式だけは即切替したいので中段に残す
+  function addCondRow(label: string, ctrl: HTMLElement, parent: HTMLElement = midCol) {
     const row = document.createElement('label');
     row.className = 'cond-row';
     const span = document.createElement('span');
     span.textContent = label;
     row.appendChild(span);
     row.appendChild(ctrl);
-    midCol.appendChild(row);
+    parent.appendChild(row);
+    return row;
   }
-  addCondRow('天候', conditionForm.weatherSelect);
-  addCondRow('フィールド', conditionForm.fieldSelect);
-  addCondRow('攻 状態', conditionForm.statusSelect);
-  addCondRow('防 状態', conditionForm.defenderStatusSelect);
-  addCondRow('防 壁', conditionForm.screenSelect);
-  addCondRow('形式', conditionForm.formatSelect);
-
-  const critLabel = document.createElement('label');
-  critLabel.className = 'cond-row toggle';
-  critLabel.appendChild(conditionForm.critCheck);
-  const critSpan = document.createElement('span');
-  critSpan.textContent = ' 攻 急所';
-  critLabel.appendChild(critSpan);
-  midCol.appendChild(critLabel);
-
-  // 防御側の追加スリップ（やどりぎ・バインド）
-  function addToggle(label: string, input: HTMLInputElement) {
+  function addToggle(label: string, input: HTMLInputElement, parent: HTMLElement = midCol) {
     const lab = document.createElement('label');
     lab.className = 'cond-row toggle';
     lab.appendChild(input);
     const span = document.createElement('span');
     span.textContent = ` ${label}`;
     lab.appendChild(span);
-    midCol.appendChild(lab);
+    parent.appendChild(lab);
+    return lab;
   }
-  addToggle('防 やどりぎ', conditionForm.leechSeedCheck);
-  addToggle('防 バインド', conditionForm.bindCheck);
-  addToggle('防 ステロ', conditionForm.stealthRockCheck);
+  // 条件サマリー & 「場の条件」タブへのリンク
+  const condShortcut = document.createElement('button');
+  condShortcut.type = 'button';
+  condShortcut.className = 'cond-shortcut';
+  condShortcut.textContent = '場の条件 →';
+  midCol.appendChild(condShortcut);
+  const condSummary = document.createElement('div');
+  condSummary.className = 'cond-summary muted';
+  midCol.appendChild(condSummary);
 
   pokeCondRow.appendChild(midCol);
 
@@ -251,17 +247,65 @@ export async function initApp(root: HTMLElement) {
   statsSection.appendChild(sgrid);
   calcView.appendChild(statsSection);
 
-  // 5c. スリップダメージのターン経過シミュレーション（防御側状態異常がある時のみ表示）
-  const slipSection = document.createElement('section');
-  slipSection.className = 'slip-section card';
-  slipSection.style.display = 'none';
-  const slipTitle = document.createElement('div');
-  slipTitle.className = 'slip-title';
-  slipSection.appendChild(slipTitle);
-  const slipGrid = document.createElement('div');
-  slipGrid.className = 'slip-grid';
-  slipSection.appendChild(slipGrid);
-  calcView.appendChild(slipSection);
+  // 5c. スリップダメージ表（攻撃側 / 防御側）。要因がある時のみ表示
+  function buildSlipBlock(sideClass: string) {
+    const section = document.createElement('section');
+    section.className = `slip-section card ${sideClass}`;
+    section.style.display = 'none';
+    const title = document.createElement('div');
+    title.className = 'slip-title';
+    section.appendChild(title);
+    const grid = document.createElement('div');
+    grid.className = 'slip-grid';
+    section.appendChild(grid);
+    return { section, title, grid };
+  }
+  const atkSlip = buildSlipBlock('slip-atk');
+  const defSlip = buildSlipBlock('slip-def');
+  calcView.appendChild(atkSlip.section);
+  calcView.appendChild(defSlip.section);
+
+  // 5d. 場の条件ビュー
+  const condView = document.createElement('div');
+  condView.className = 'view view-cond';
+  condView.style.display = 'none';
+  condView.innerHTML = '<h2>場の条件</h2>';
+
+  function makeCondCard(title: string): HTMLElement {
+    const card = document.createElement('section');
+    card.className = 'card cond-card';
+    const h = document.createElement('h3');
+    h.className = 'cond-card-h';
+    h.textContent = title;
+    card.appendChild(h);
+    return card;
+  }
+  // 場全体
+  const fieldCard = makeCondCard('場全体');
+  addCondRow('天候', conditionForm.weatherSelect, fieldCard);
+  addCondRow('フィールド', conditionForm.fieldSelect, fieldCard);
+  addCondRow('形式', conditionForm.formatSelect, fieldCard);
+  condView.appendChild(fieldCard);
+  // 攻撃側
+  const atkCard = makeCondCard('攻撃側');
+  atkCard.classList.add('side-atk');
+  addCondRow('状態異常', conditionForm.statusSelect, atkCard);
+  addToggle('やどりぎ', conditionForm.attackerLeechSeedCheck, atkCard);
+  addToggle('バインド', conditionForm.attackerBindCheck, atkCard);
+  addToggle('ステロ', conditionForm.attackerStealthRockCheck, atkCard);
+  addToggle('急所を出す', conditionForm.critCheck, atkCard);
+  condView.appendChild(atkCard);
+  // 防御側
+  const defCard2 = makeCondCard('防御側');
+  defCard2.classList.add('side-def');
+  addCondRow('状態異常', conditionForm.defenderStatusSelect, defCard2);
+  addCondRow('壁', conditionForm.screenSelect, defCard2);
+  addToggle('やどりぎ', conditionForm.leechSeedCheck, defCard2);
+  addToggle('バインド', conditionForm.bindCheck, defCard2);
+  addToggle('ステロ', conditionForm.stealthRockCheck, defCard2);
+  condView.appendChild(defCard2);
+
+  root.appendChild(condView);
 
   // 5b. 登録ページ（別ビュー）
   const regPage = createRegistrationPage(data);
@@ -272,21 +316,33 @@ export async function initApp(root: HTMLElement) {
   root.appendChild(regView);
 
   // タブ切替
+  function activate(tab: HTMLElement) {
+    [calcTab, condTab, regTab].forEach((t) => t.classList.remove('active'));
+    tab.classList.add('active');
+  }
   function showCalc() {
     calcView.style.display = '';
+    condView.style.display = 'none';
     regView.style.display = 'none';
-    calcTab.classList.add('active');
-    regTab.classList.remove('active');
+    activate(calcTab);
+  }
+  function showCond() {
+    calcView.style.display = 'none';
+    condView.style.display = '';
+    regView.style.display = 'none';
+    activate(condTab);
   }
   function showReg() {
     calcView.style.display = 'none';
+    condView.style.display = 'none';
     regView.style.display = '';
-    regTab.classList.add('active');
-    calcTab.classList.remove('active');
+    activate(regTab);
     regPage.refresh();
   }
   calcTab.addEventListener('click', showCalc);
+  condTab.addEventListener('click', showCond);
   regTab.addEventListener('click', showReg);
+  condShortcut.addEventListener('click', showCond);
 
   // 6. recalc
   function recalc() {
@@ -359,59 +415,100 @@ export async function initApp(root: HTMLElement) {
       });
     }
 
-    // スリップダメージ表の更新
-    updateSlipTable(dStats?.hp ?? 0, dState.hpRatio, cond, dActive?.types ?? []);
+    // スリップ表（攻防両方）
+    renderSlip(
+      atkSlip,
+      '攻撃側',
+      aStats?.hp ?? 0,
+      aState.hpRatio,
+      cond.attackerStatus,
+      cond.attackerLeechSeed,
+      cond.attackerBind,
+      cond.attackerStealthRock,
+      aActive?.types ?? [],
+    );
+    renderSlip(
+      defSlip,
+      '防御側',
+      dStats?.hp ?? 0,
+      dState.hpRatio,
+      cond.defenderStatus,
+      cond.defenderLeechSeed,
+      cond.defenderBind,
+      cond.defenderStealthRock,
+      dActive?.types ?? [],
+    );
+
+    // 中段の条件サマリー更新
+    updateCondSummary(cond);
   }
 
-  // 防御側のスリップを6ターン分（0T..5T）表示する。状態異常+やどりぎ+バインドを合算、ステロは入場時のみ。
-  function updateSlipTable(
+  function updateCondSummary(cond: ConditionState) {
+    const parts: string[] = [];
+    if (cond.weather !== 'none') parts.push(`天:${cond.weather}`);
+    if (cond.field !== 'none') parts.push(`場:${cond.field}`);
+    if (cond.screen !== 'none') parts.push(`壁:${cond.screen}`);
+    if (cond.attackerStatus !== 'none') parts.push(`攻状態:${cond.attackerStatus}`);
+    if (cond.defenderStatus !== 'none') parts.push(`防状態:${cond.defenderStatus}`);
+    if (cond.isCritical) parts.push('急所');
+    if (cond.format === 'double') parts.push('ダブル');
+    const extras: string[] = [];
+    if (cond.attackerLeechSeed || cond.attackerBind || cond.attackerStealthRock) extras.push('攻スリップ');
+    if (cond.defenderLeechSeed || cond.defenderBind || cond.defenderStealthRock) extras.push('防スリップ');
+    if (extras.length) parts.push(extras.join(','));
+    condSummary.textContent = parts.length ? parts.join(' / ') : '条件なし';
+  }
+
+  // スリップ表を片側分描画する共通ヘルパ。
+  function renderSlip(
+    target: { section: HTMLElement; title: HTMLElement; grid: HTMLElement },
+    sideLabel: string,
     maxHp: number,
     hpRatio: number,
-    cond: ConditionState,
-    defenderTypes: import('../data/types').PokemonType[],
+    status: string,
+    leechSeed: boolean,
+    bind: boolean,
+    stealthRock: boolean,
+    types: import('../data/types').PokemonType[],
   ) {
-    const status = cond.defenderStatus;
     const statusLabels: Record<string, string> = {
       burn: 'やけど(1/16)',
       poison: 'どく(1/8)',
       badpoison: 'もうどく(累積)',
     };
-    // ステロは岩タイプの相性倍率（×0.25〜×4）で 1/8 を掛ける
     let stealthDmg = 0;
     let stealthMult = 1;
-    if (cond.defenderStealthRock && defenderTypes.length > 0) {
-      stealthMult = getTypeMultiplier('rock', defenderTypes, data.typeChart.chart);
+    if (stealthRock && types.length > 0) {
+      stealthMult = getTypeMultiplier('rock', types, data.typeChart.chart);
       stealthDmg = Math.floor((maxHp * stealthMult) / 8);
     }
-
     const parts: string[] = [];
     if (statusLabels[status]) parts.push(statusLabels[status]);
-    if (cond.defenderLeechSeed) parts.push('やどりぎ(1/8)');
-    if (cond.defenderBind) parts.push('バインド(1/8)');
-    if (cond.defenderStealthRock) parts.push(`ステロ(${stealthMult}×)`);
+    if (leechSeed) parts.push('やどりぎ(1/8)');
+    if (bind) parts.push('バインド(1/8)');
+    if (stealthRock) parts.push(`ステロ(${stealthMult}×)`);
 
     if (parts.length === 0 || maxHp <= 0) {
-      slipSection.style.display = 'none';
+      target.section.style.display = 'none';
       return;
     }
-    slipSection.style.display = '';
-    slipTitle.textContent = `スリップ ${parts.join(' + ')}`;
-    slipGrid.innerHTML = '';
+    target.section.style.display = '';
+    target.title.textContent = `${sideLabel}スリップ ${parts.join(' + ')}`;
+    target.grid.innerHTML = '';
 
     const currentHp = Math.floor(maxHp * hpRatio);
     const burnTick = Math.max(1, Math.floor(maxHp / 16));
     const eighth = Math.max(1, Math.floor(maxHp / 8));
 
     function damageAtTurn(n: number): number {
-      // ステロは入場時のみなので t>=0 で1回だけ加算（0Tで既に控除済みのHPを起点）
-      let acc = cond.defenderStealthRock ? stealthDmg : 0;
+      let acc = stealthRock ? stealthDmg : 0;
       if (status === 'burn') acc += burnTick * n;
       else if (status === 'poison') acc += eighth * n;
       else if (status === 'badpoison') {
         for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
       }
-      if (cond.defenderLeechSeed) acc += eighth * n;
-      if (cond.defenderBind) acc += eighth * n;
+      if (leechSeed) acc += eighth * n;
+      if (bind) acc += eighth * n;
       return acc;
     }
 
@@ -431,7 +528,7 @@ export async function initApp(root: HTMLElement) {
       delta.textContent = t === 0 ? '-' : `-${dmg}`;
       if (hp === 0) cell.classList.add('slip-cell-ko');
       cell.append(head, val, delta);
-      slipGrid.appendChild(cell);
+      target.grid.appendChild(cell);
     }
   }
 

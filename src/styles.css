@@ -81,6 +81,56 @@ h1 {
   flex: 1;
 }
 
+.view-cond {
+  flex: 1;
+}
+
+.cond-card {
+  margin-bottom: 8px;
+}
+
+.cond-card.side-atk {
+  border-left: 4px solid var(--atk);
+}
+
+.cond-card.side-def {
+  border-left: 4px solid var(--def);
+}
+
+.cond-card-h {
+  font-size: 12px;
+  color: var(--accent);
+  margin: 0 0 6px;
+}
+
+.cond-shortcut {
+  width: 100%;
+  padding: 8px;
+  background: #3a3a3a;
+  color: var(--fg);
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  font-size: 11px;
+  cursor: pointer;
+  margin-top: 4px;
+}
+
+.cond-summary {
+  font-size: 9px;
+  text-align: center;
+  padding: 4px 2px;
+  line-height: 1.3;
+  word-break: break-all;
+}
+
+.slip-section.slip-atk {
+  border-left: 3px solid var(--atk);
+}
+
+.slip-section.slip-def {
+  border-left: 3px solid var(--def);
+}
+
 /* ── 技+結果セクション ── */
 .moves-section {
   background: var(--card-bg);

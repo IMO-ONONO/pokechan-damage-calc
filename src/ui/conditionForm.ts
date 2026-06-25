@@ -5,6 +5,9 @@ export interface ConditionState {
   weather: Weather;
   field: Field;
   attackerStatus: Status;
+  attackerLeechSeed: boolean;
+  attackerBind: boolean;
+  attackerStealthRock: boolean;
   defenderStatus: Status;
   defenderLeechSeed: boolean;
   defenderBind: boolean;
@@ -19,9 +22,14 @@ export interface ConditionFormHandle {
   fieldSelect: HTMLSelectElement;
   statusSelect: HTMLSelectElement;
   defenderStatusSelect: HTMLSelectElement;
+  // 防御側スリップ要因
   leechSeedCheck: HTMLInputElement;
   bindCheck: HTMLInputElement;
   stealthRockCheck: HTMLInputElement;
+  // 攻撃側スリップ要因
+  attackerLeechSeedCheck: HTMLInputElement;
+  attackerBindCheck: HTMLInputElement;
+  attackerStealthRockCheck: HTMLInputElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -46,6 +54,9 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     weather: 'none',
     field: 'none',
     attackerStatus: 'none',
+    attackerLeechSeed: false,
+    attackerBind: false,
+    attackerStealthRock: false,
     defenderStatus: 'none',
     defenderLeechSeed: false,
     defenderBind: false,
@@ -70,6 +81,12 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   bindCheck.type = 'checkbox';
   const stealthRockCheck = document.createElement('input');
   stealthRockCheck.type = 'checkbox';
+  const attackerLeechSeedCheck = document.createElement('input');
+  attackerLeechSeedCheck.type = 'checkbox';
+  const attackerBindCheck = document.createElement('input');
+  attackerBindCheck.type = 'checkbox';
+  const attackerStealthRockCheck = document.createElement('input');
+  attackerStealthRockCheck.type = 'checkbox';
 
   weatherSelect.addEventListener('change', () => {
     state.weather = weatherSelect.value as Weather;
@@ -111,6 +128,18 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     state.defenderStealthRock = stealthRockCheck.checked;
     onChange();
   });
+  attackerLeechSeedCheck.addEventListener('change', () => {
+    state.attackerLeechSeed = attackerLeechSeedCheck.checked;
+    onChange();
+  });
+  attackerBindCheck.addEventListener('change', () => {
+    state.attackerBind = attackerBindCheck.checked;
+    onChange();
+  });
+  attackerStealthRockCheck.addEventListener('change', () => {
+    state.attackerStealthRock = attackerStealthRockCheck.checked;
+    onChange();
+  });
 
   return {
     weatherSelect,
@@ -120,6 +149,9 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     leechSeedCheck,
     bindCheck,
     stealthRockCheck,
+    attackerLeechSeedCheck,
+    attackerBindCheck,
+    attackerStealthRockCheck,
     screenSelect,
     formatSelect,
     critCheck,
