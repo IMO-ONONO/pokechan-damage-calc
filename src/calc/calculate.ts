@@ -8,6 +8,7 @@ import {
   getPinchAbilityModifier,
   getScreenModifier,
   getSpreadModifier,
+  getWeatherDefenseModifier,
   getWeatherModifier,
   type ModifierBreakdown,
   type ModifierContext,
@@ -55,10 +56,17 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     context.isCritical && attackStage < 0
       ? baseAttack
       : applyStatStage(baseAttack, attackStage);
-  const effectiveDefense =
+  const stagedDefense =
     context.isCritical && defenseStage > 0
       ? baseDefense
       : applyStatStage(baseDefense, defenseStage);
+  // 砂嵐(いわ特防×1.5) / 雪(こおり防御×1.5) を防御値に適用
+  const weatherDefMod = getWeatherDefenseModifier(
+    context.weather,
+    context.defenderTypes,
+    context.category,
+  );
+  const effectiveDefense = Math.floor(stagedDefense * weatherDefMod);
 
   const stab = getStab(
     context.moveType,

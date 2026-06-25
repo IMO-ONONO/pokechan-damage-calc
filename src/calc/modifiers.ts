@@ -20,6 +20,26 @@ export function getWeatherModifier(moveType: PokemonType, weather: Weather): num
   return 1;
 }
 
+// 天候による防御側の防御/特防補正。
+// 砂嵐：いわタイプの特防×1.5（受けるのが特殊技の時）
+// 雪：こおりタイプの防御×1.5（受けるのが物理技の時）
+export function getWeatherDefenseModifier(
+  weather: Weather,
+  defenderTypes: PokemonType[],
+  category: MoveCategory,
+): number {
+  if (weather === 'sand' && category === 'special' && defenderTypes.includes('rock')) return 1.5;
+  if (weather === 'snow' && category === 'physical' && defenderTypes.includes('ice')) return 1.5;
+  return 1;
+}
+
+// 天候スリップ判定。砂嵐は いわ/じめん/はがね 以外が毎ターン最大HPの1/16ダメージ。
+// 雪・晴れ・雨はスリップなし。
+export function isWeatherSlipped(weather: Weather, types: PokemonType[]): boolean {
+  if (weather !== 'sand') return false;
+  return !types.some((t) => t === 'rock' || t === 'ground' || t === 'steel');
+}
+
 export function getFieldModifier(
   moveType: PokemonType,
   field: Field,

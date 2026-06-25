@@ -1,4 +1,5 @@
 import { calculateFullDamage } from '../calc/calculate';
+import { isWeatherSlipped } from '../calc/modifiers';
 import { getTypeMultiplier } from '../calc/typeChart';
 import { loadGameData } from '../data/loader';
 import type { SavedPokemon } from '../data/savedPokemon';
@@ -426,6 +427,7 @@ export async function initApp(root: HTMLElement) {
       cond.attackerBind,
       cond.attackerStealthRock,
       aActive?.types ?? [],
+      cond.weather,
     );
     renderSlip(
       defSlip,
@@ -437,6 +439,7 @@ export async function initApp(root: HTMLElement) {
       cond.defenderBind,
       cond.defenderStealthRock,
       dActive?.types ?? [],
+      cond.weather,
     );
 
     // 中段の条件サマリー更新
@@ -470,6 +473,7 @@ export async function initApp(root: HTMLElement) {
     bind: boolean,
     stealthRock: boolean,
     types: import('../data/types').PokemonType[],
+    weather: import('../data/types').Weather,
   ) {
     const statusLabels: Record<string, string> = {
       burn: 'やけど(1/16)',
@@ -482,11 +486,13 @@ export async function initApp(root: HTMLElement) {
       stealthMult = getTypeMultiplier('rock', types, data.typeChart.chart);
       stealthDmg = Math.floor((maxHp * stealthMult) / 8);
     }
+    const sandSlip = isWeatherSlipped(weather, types);
     const parts: string[] = [];
     if (statusLabels[status]) parts.push(statusLabels[status]);
     if (leechSeed) parts.push('やどりぎ(1/8)');
     if (bind) parts.push('バインド(1/8)');
     if (stealthRock) parts.push(`ステロ(${stealthMult}×)`);
+    if (sandSlip) parts.push('砂嵐(1/16)');
 
     if (parts.length === 0 || maxHp <= 0) {
       target.section.style.display = 'none';
@@ -509,6 +515,7 @@ export async function initApp(root: HTMLElement) {
       }
       if (leechSeed) acc += eighth * n;
       if (bind) acc += eighth * n;
+      if (sandSlip) acc += burnTick * n;
       return acc;
     }
 
