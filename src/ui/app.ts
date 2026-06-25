@@ -103,16 +103,16 @@ export async function initApp(root: HTMLElement) {
   }
   addCondRow('天候', conditionForm.weatherSelect);
   addCondRow('フィールド', conditionForm.fieldSelect);
-  addCondRow('攻状態', conditionForm.statusSelect);
-  addCondRow('防状態', conditionForm.defenderStatusSelect);
-  addCondRow('壁', conditionForm.screenSelect);
+  addCondRow('攻 状態', conditionForm.statusSelect);
+  addCondRow('防 状態', conditionForm.defenderStatusSelect);
+  addCondRow('防 壁', conditionForm.screenSelect);
   addCondRow('形式', conditionForm.formatSelect);
 
   const critLabel = document.createElement('label');
   critLabel.className = 'cond-row toggle';
   critLabel.appendChild(conditionForm.critCheck);
   const critSpan = document.createElement('span');
-  critSpan.textContent = ' 急所';
+  critSpan.textContent = ' 攻 急所';
   critLabel.appendChild(critSpan);
   midCol.appendChild(critLabel);
 
@@ -126,9 +126,9 @@ export async function initApp(root: HTMLElement) {
     lab.appendChild(span);
     midCol.appendChild(lab);
   }
-  addToggle('やどりぎ', conditionForm.leechSeedCheck);
-  addToggle('バインド', conditionForm.bindCheck);
-  addToggle('ステロ', conditionForm.stealthRockCheck);
+  addToggle('防 やどりぎ', conditionForm.leechSeedCheck);
+  addToggle('防 バインド', conditionForm.bindCheck);
+  addToggle('防 ステロ', conditionForm.stealthRockCheck);
 
   pokeCondRow.appendChild(midCol);
 
