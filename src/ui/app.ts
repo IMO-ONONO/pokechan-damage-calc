@@ -305,6 +305,7 @@ export async function initApp(root: HTMLElement) {
   addToggle('やどりぎ', conditionForm.leechSeedCheck, defCard2);
   addToggle('バインド', conditionForm.bindCheck, defCard2);
   addToggle('ステロ', conditionForm.stealthRockCheck, defCard2);
+  addToggle('ばけのかわ残り（ミミッキュ）', conditionForm.disguiseCheck, defCard2);
   condView.appendChild(defCard2);
 
   root.appendChild(condView);
@@ -409,6 +410,7 @@ export async function initApp(root: HTMLElement) {
           format: cond.format,
           moveTarget: move.target,
           isCritical: cond.isCritical,
+          disguiseActive: cond.defenderDisguiseActive,
         },
         typeChart: data.typeChart.chart,
       });

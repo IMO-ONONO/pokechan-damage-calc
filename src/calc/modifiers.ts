@@ -177,6 +177,8 @@ export interface ModifierContext {
   isCritical: boolean;
   isAttackerGrounded?: boolean;
   isDefenderGrounded?: boolean;
+  // ミミッキュのばけのかわが残っている状態。true なら全ての攻撃技を無効化
+  disguiseActive?: boolean;
 }
 
 export interface ModifierBreakdown {
