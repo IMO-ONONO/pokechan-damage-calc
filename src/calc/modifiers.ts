@@ -174,6 +174,8 @@ export interface ModifierContext {
   screen: Screen;
   format: BattleFormat;
   moveTarget?: string;
+  // PokeAPI英語名（音技判定などに使用）
+  moveName?: string;
   isCritical: boolean;
   isAttackerGrounded?: boolean;
   isDefenderGrounded?: boolean;

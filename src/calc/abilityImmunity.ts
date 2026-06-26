@@ -37,3 +37,62 @@ export function ignoresDefenderAbility(attackerAbility: string | undefined): boo
   if (!attackerAbility) return false;
   return ABILITY_IGNORERS.has(attackerAbility);
 }
+
+// 音技固定リスト（ダメージ技中心）。ぼうおんはこれらを無効化する。
+const SOUND_MOVES = new Set([
+  'hyper-voice',
+  'boomburst',
+  'echoed-voice',
+  'snore',
+  'round',
+  'relic-song',
+  'chatter',
+  'bug-buzz',
+  'disarming-voice',
+  'overdrive',
+  'snarl',
+  'uproar',
+  'clanging-scales',
+  'clangorous-soulblaze',
+  'clangorous-soul',
+  'sparkling-aria',
+  'eerie-spell',
+  'torch-song',
+  'alluring-voice',
+  'psychic-noise',
+]);
+
+export function isSoundMove(moveName: string | undefined): boolean {
+  return !!moveName && SOUND_MOVES.has(moveName);
+}
+
+export function isSoundproofImmune(
+  ability: string | undefined,
+  moveName: string | undefined,
+): boolean {
+  return ability === 'soundproof' && isSoundMove(moveName);
+}
+
+// 防御側特性によるタイプ半減（無効ではない）。
+// あついしぼう（thick-fat）: ほのお/こおり 0.5倍
+// プリズムアーマー / フィルター / ハードロック: 効果バツグンを 0.75倍（攻撃側の弱点突きを軽減）
+// パンクロック（防御側）: 音技 0.5倍
+export function getDefenderAbilityHalveModifier(
+  moveType: import('../data/types').PokemonType,
+  defenderAbility: string | undefined,
+  typeEffectiveness: number,
+  moveName: string | undefined,
+): number {
+  if (!defenderAbility) return 1;
+  if (defenderAbility === 'thick-fat' && (moveType === 'fire' || moveType === 'ice')) return 0.5;
+  if (defenderAbility === 'punk-rock' && isSoundMove(moveName)) return 0.5;
+  if (
+    (defenderAbility === 'filter' ||
+      defenderAbility === 'solid-rock' ||
+      defenderAbility === 'prism-armor') &&
+    typeEffectiveness > 1
+  ) {
+    return 0.75;
+  }
+  return 1;
+}

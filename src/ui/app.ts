@@ -409,6 +409,7 @@ export async function initApp(root: HTMLElement) {
           screen: cond.screen,
           format: cond.format,
           moveTarget: move.target,
+          moveName: move.name,
           isCritical: cond.isCritical,
           disguiseActive: cond.defenderDisguiseActive,
         },

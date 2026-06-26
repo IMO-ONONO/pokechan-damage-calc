@@ -1,6 +1,6 @@
 // 完全オフライン優先 Service Worker。
 // Macを閉じていても起動できるよう、すべてキャッシュ優先（裏でネットワーク更新）。
-const CACHE = 'pokechan-v10';
+const CACHE = 'pokechan-v11';
 const CORE = [
   './',
   './index.html',

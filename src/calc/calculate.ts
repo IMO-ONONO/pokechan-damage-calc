@@ -1,5 +1,10 @@
 import type { Stats, StatStages, TypeChartData } from '../data/types';
-import { ignoresDefenderAbility, isAbilityImmune } from './abilityImmunity';
+import {
+  getDefenderAbilityHalveModifier,
+  ignoresDefenderAbility,
+  isAbilityImmune,
+  isSoundproofImmune,
+} from './abilityImmunity';
 import { calculateDamageRange, type DamageRange } from './damage';
 import {
   getAttackerItemModifier,
@@ -77,13 +82,21 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   // 化けの皮（ミミッキュ）または防御側特性によるタイプ無効化を判定。
   // かたやぶり等の特性無視系が攻撃側にある場合は特性無効化を貫通する（化けの皮は貫通しない）。
   const disguiseBlock = !!context.disguiseActive && context.defenderAbility === 'disguise';
+  const ignoreAbility = ignoresDefenderAbility(context.attackerAbility);
   const abilityBlock =
-    !ignoresDefenderAbility(context.attackerAbility) &&
-    isAbilityImmune(context.moveType, context.defenderAbility);
-  const typeEffectiveness =
-    disguiseBlock || abilityBlock
-      ? 0
-      : getTypeMultiplier(context.moveType, context.defenderTypes, typeChart);
+    !ignoreAbility &&
+    (isAbilityImmune(context.moveType, context.defenderAbility) ||
+      isSoundproofImmune(context.defenderAbility, context.moveName));
+  const baseTypeEff = getTypeMultiplier(context.moveType, context.defenderTypes, typeChart);
+  const halveMod = ignoreAbility
+    ? 1
+    : getDefenderAbilityHalveModifier(
+        context.moveType,
+        context.defenderAbility,
+        baseTypeEff,
+        context.moveName,
+      );
+  const typeEffectiveness = disguiseBlock || abilityBlock ? 0 : baseTypeEff * halveMod;
   const weather = getWeatherModifier(context.moveType, context.weather);
   const field = getFieldModifier(
     context.moveType,
