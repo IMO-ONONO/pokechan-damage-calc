@@ -193,7 +193,7 @@ export interface ModifierBreakdown {
   critical: number;
   burn: number;
   pinchAbility: number;
-  flashFireAbility: number;
+  attackerAbilityBoost: number;
   attackerItem: number;
   screen: number;
   spread: number;

@@ -75,13 +75,21 @@ export function isSoundproofImmune(
 
 // 攻撃側特性によるダメージ倍率。
 // もらいび（flash-fire）: 発動済みのとき、ほのお技ダメージ ×1.5。
+// ちからもち（huge-power）／ヨガパワー（pure-power）: 物理技ダメージ ×2。
 export function getAttackerAbilityBoost(
   attackerAbility: string | undefined,
   moveType: import('../data/types').PokemonType,
+  category: import('../data/types').MoveCategory,
   flashFireActive: boolean,
 ): number {
-  if (attackerAbility === 'flash-fire' && flashFireActive && moveType === 'fire') return 1.5;
-  return 1;
+  let mod = 1;
+  if (attackerAbility === 'flash-fire' && flashFireActive && moveType === 'fire') mod *= 1.5;
+  if (
+    (attackerAbility === 'huge-power' || attackerAbility === 'pure-power') &&
+    category === 'physical'
+  )
+    mod *= 2;
+  return mod;
 }
 
 // 防御側特性によるタイプ半減（無効ではない）。

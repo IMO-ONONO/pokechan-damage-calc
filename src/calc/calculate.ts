@@ -54,9 +54,9 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   } = input;
 
   // ランクを「無視」フラグ付きで適用するヘルパ。
-  // ignore=true かつ stage>0 のとき、上昇分を無視して 0 として扱う（下降は無視しない）。
+  // ignore=true のとき、ランクの上昇・下降の両方を無視して 0 として扱う。
   function effectiveStage(stage: number, ignore: boolean): number {
-    if (ignore && stage > 0) return 0;
+    if (ignore) return 0;
     return stage;
   }
 
@@ -134,9 +134,10 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     context.moveType,
     context.attackerHpRatio,
   );
-  const flashFireAbility = getAttackerAbilityBoost(
+  const attackerAbilityBoost = getAttackerAbilityBoost(
     context.attackerAbility,
     context.moveType,
+    context.category,
     context.attackerFlashFireActive ?? false,
   );
   const attackerItem = getAttackerItemModifier(
@@ -154,7 +155,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   const spread = getSpreadModifier(context.moveTarget, context.format);
 
   // 本編準拠の sequential floor で適用するため、modifier を列で渡す。
-  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → もらいび → アイテム → 壁 → 範囲技
+  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → 攻撃特性ブースト → アイテム → 壁 → 範囲技
   const modifierList = [
     stab,
     typeEffectiveness,
@@ -163,7 +164,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     critical,
     burn,
     pinchAbility,
-    flashFireAbility,
+    attackerAbilityBoost,
     attackerItem,
     screen,
     spread,
@@ -176,7 +177,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     critical *
     burn *
     pinchAbility *
-    flashFireAbility *
+    attackerAbilityBoost *
     attackerItem *
     screen *
     spread;
@@ -201,7 +202,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
       critical,
       burn,
       pinchAbility,
-      flashFireAbility,
+      attackerAbilityBoost,
       attackerItem,
       screen,
       spread,
