@@ -651,6 +651,11 @@ input[type='number'] {
   padding: 2px;
 }
 
+select.sg-stage-select {
+  padding: 1px 0;
+  cursor: pointer;
+}
+
 .muted {
   color: var(--muted);
   font-size: 11px;

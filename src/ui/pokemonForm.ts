@@ -88,7 +88,7 @@ export interface StatCells {
   ivEl: HTMLInputElement;
   evEl: HTMLInputElement;
   actualEl: HTMLElement;
-  stageEl: HTMLInputElement | null;
+  stageEl: HTMLSelectElement | null;
 }
 
 export interface PokeFormHandle {
@@ -250,14 +250,17 @@ export function createPokemonForm(
     actualEl.className = 'sg-actual';
     actualEl.textContent = '-';
 
-    let stageEl: HTMLInputElement | null = null;
+    let stageEl: HTMLSelectElement | null = null;
     if (key !== 'hp') {
-      stageEl = document.createElement('input');
-      stageEl.type = 'number';
-      stageEl.className = 'sg-input';
-      stageEl.min = '-6';
-      stageEl.max = '6';
-      stageEl.step = '1';
+      stageEl = document.createElement('select');
+      stageEl.className = 'sg-input sg-stage-select';
+      for (let v = -6; v <= 6; v++) {
+        const opt = document.createElement('option');
+        opt.value = String(v);
+        opt.textContent = v > 0 ? `+${v}` : String(v);
+        if (v === 0) stageEl.value = '0';
+        stageEl.appendChild(opt);
+      }
       stageEl.value = '0';
     }
 
@@ -274,7 +277,7 @@ export function createPokemonForm(
     if (stageEl && key !== 'hp') {
       const k = key as Exclude<StatKey, 'hp'>;
       stageEl.addEventListener('change', () => {
-        state.stages[k] = Math.max(-6, Math.min(6, parseInt(stageEl!.value, 10) || 0));
+        state.stages[k] = Number(stageEl!.value);
         onChange();
       });
     }
@@ -438,8 +441,9 @@ export function createPokemonForm(
       statCells[key].evEl.value = String(s.evs[key]);
     }
     for (const key of STAGE_KEYS) {
-      if (statCells[key].stageEl) {
-        statCells[key].stageEl!.value = String(s.stages[key]);
+      const sel = statCells[key].stageEl;
+      if (sel) {
+        sel.value = String(s.stages[key]);
       }
     }
 
