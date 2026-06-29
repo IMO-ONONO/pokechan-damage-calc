@@ -102,11 +102,19 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   );
   const effectiveDefense = Math.floor(stagedDefense * weatherDefMod);
 
-  const stab = getStab(
+  let stab = getStab(
     context.moveType,
     context.attackerTypes,
     context.attackerAbility === 'adaptability',
   );
+  // 変幻自在 / リベロ: 攻撃側のタイプが技タイプに変化するためSTABが常に付与される。
+  // 既にSTABが付いている（タイプ一致 or てきおうりょく）場合は値を上書きしない。
+  if (
+    stab === 1 &&
+    (context.attackerAbility === 'protean' || context.attackerAbility === 'libero')
+  ) {
+    stab = 1.5;
+  }
   // 化けの皮（ミミッキュ）または防御側特性によるタイプ無効化を判定。
   // かたやぶり等の特性無視系が攻撃側にある場合は特性無効化を貫通する（化けの皮は貫通しない）。
   const disguiseBlock = !!context.disguiseActive && context.defenderAbility === 'disguise';
