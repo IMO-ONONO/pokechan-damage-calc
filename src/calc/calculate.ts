@@ -78,10 +78,18 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   const attackStage = effectiveStage(rawAttackStage, defenderUnawareActive);
   const defenseStage = effectiveStage(rawDefenseStage, attackerUnawareActive);
 
-  const effectiveAttack =
+  let effectiveAttack =
     context.isCritical && attackStage < 0
       ? baseAttack
       : applyStatStage(baseAttack, attackStage);
+  // ちからもち（huge-power）／ヨガパワー（pure-power）は攻撃実数値を2倍にする本編仕様。
+  // sequential floor のBase damage計算前に反映するため、effectiveAttack を倍にする。
+  if (
+    context.category === 'physical' &&
+    (context.attackerAbility === 'huge-power' || context.attackerAbility === 'pure-power')
+  ) {
+    effectiveAttack *= 2;
+  }
   const stagedDefense =
     context.isCritical && defenseStage > 0
       ? baseDefense
