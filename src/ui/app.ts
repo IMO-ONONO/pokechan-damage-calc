@@ -390,7 +390,7 @@ export async function initApp(root: HTMLElement) {
         continue;
       }
       // 動的タイプ・威力解決（ウェザーボール等）
-      const resolved = resolveDynamicMove(move, cond.weather, cond.defenderStatus);
+      const resolved = resolveDynamicMove(move, cond.weather, cond.defenderStatus, aState.ability);
       const result = calculateFullDamage({
         level: aState.level,
         movePower: resolved.power,
