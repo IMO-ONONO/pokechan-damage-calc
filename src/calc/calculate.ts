@@ -115,15 +115,8 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     effectiveAttackerTypes,
     context.attackerAbility === 'adaptability',
   );
-  // 変幻自在 / リベロ: 変化先タイプが選択されていない場合の保険として STAB=1 → 1.5 に上書き。
-  // タイプ選択時は effectiveAttackerTypes で既に正しい STAB が計算されているため、ここでは触らない。
-  if (
-    stab === 1 &&
-    !context.attackerProteanType &&
-    (context.attackerAbility === 'protean' || context.attackerAbility === 'libero')
-  ) {
-    stab = 1.5;
-  }
+  // 変幻自在 / リベロ: 「変化先タイプ」セレクタが未選択の場合は元タイプのまま STAB 判定（自動上書きはしない）。
+  // タイプ選択時は effectiveAttackerTypes が選択タイプに上書きされ、getStab で正しい STAB が計算される。
   // 化けの皮（ミミッキュ）または防御側特性によるタイプ無効化を判定。
   // かたやぶり等の特性無視系が攻撃側にある場合は特性無効化を貫通する（化けの皮は貫通しない）。
   const disguiseBlock = !!context.disguiseActive && context.defenderAbility === 'disguise';
