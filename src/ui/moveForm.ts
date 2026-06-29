@@ -125,7 +125,7 @@ export function createMoveSlot(
     moveInfo.appendChild(chip);
     const txt = document.createElement('span');
     const catLabel = m.category === 'physical' ? '物理' : m.category === 'special' ? '特殊' : '変化';
-    const suffix = override ? '（天候連動）' : '';
+    const suffix = override ? '（変動中）' : '';
     txt.textContent = ` ${catLabel} 威${effPower ?? '-'} 命${m.accuracy ?? '-'}${suffix}`;
     moveInfo.appendChild(txt);
   }
