@@ -1,5 +1,6 @@
-import type { BattleFormat, Field, Screen, Status, Weather } from '../data/types';
+import type { BattleFormat, Field, PokemonType, Screen, Status, Weather } from '../data/types';
 import { FIELDS, FORMATS, SCREENS, STATUSES, WEATHERS } from './constants';
+import { TYPE_COLORS } from './typeColors';
 
 export interface ConditionState {
   weather: Weather;
@@ -16,6 +17,8 @@ export interface ConditionState {
   defenderDisguiseActive: boolean;
   // もらいびが発動済みかどうか（攻撃側がもらいび特性のとき）
   attackerFlashFireActive: boolean;
+  // 変幻自在/リベロ発動済み時の変化後タイプ（''=未選択）
+  attackerProteanType: PokemonType | '';
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -38,6 +41,8 @@ export interface ConditionFormHandle {
   disguiseCheck: HTMLInputElement;
   // 攻撃側もらいび発動済み
   flashFireCheck: HTMLInputElement;
+  // 変幻自在/リベロ 変化後タイプ
+  proteanTypeSelect: HTMLSelectElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -71,6 +76,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     defenderStealthRock: false,
     defenderDisguiseActive: true,
     attackerFlashFireActive: false,
+    attackerProteanType: '',
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -102,6 +108,24 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   disguiseCheck.checked = true;
   const flashFireCheck = document.createElement('input');
   flashFireCheck.type = 'checkbox';
+
+  // 変幻自在/リベロ 変化後タイプセレクタ（stellar を除く18タイプ）
+  const PROTEAN_TYPES: PokemonType[] = [
+    'normal', 'fighting', 'flying', 'poison', 'ground', 'rock',
+    'bug', 'ghost', 'steel', 'fire', 'water', 'grass',
+    'electric', 'psychic', 'ice', 'dragon', 'dark', 'fairy',
+  ];
+  const proteanTypeSelect = document.createElement('select');
+  const noneOpt = document.createElement('option');
+  noneOpt.value = '';
+  noneOpt.textContent = 'なし';
+  proteanTypeSelect.appendChild(noneOpt);
+  for (const t of PROTEAN_TYPES) {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = TYPE_COLORS[t].ja;
+    proteanTypeSelect.appendChild(opt);
+  }
 
   weatherSelect.addEventListener('change', () => {
     state.weather = weatherSelect.value as Weather;
@@ -163,6 +187,10 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     state.attackerFlashFireActive = flashFireCheck.checked;
     onChange();
   });
+  proteanTypeSelect.addEventListener('change', () => {
+    state.attackerProteanType = proteanTypeSelect.value as PokemonType | '';
+    onChange();
+  });
 
   return {
     weatherSelect,
@@ -177,6 +205,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     attackerStealthRockCheck,
     disguiseCheck,
     flashFireCheck,
+    proteanTypeSelect,
     screenSelect,
     formatSelect,
     critCheck,

@@ -60,6 +60,14 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     return stage;
   }
 
+  // 変幻自在/リベロ 変化後タイプが選択されている場合、攻撃側タイプをそのタイプに上書き
+  const proteanActive =
+    (context.attackerAbility === 'protean' || context.attackerAbility === 'libero') &&
+    !!context.attackerProteanType;
+  const effectiveAttackerTypes = proteanActive
+    ? [context.attackerProteanType as import('../data/types').PokemonType]
+    : context.attackerTypes;
+
   const isPhysical = context.category === 'physical';
   const baseAttack = isPhysical ? attackerStats.attack : attackerStats.spAttack;
   const baseDefense = isPhysical ? defenderStats.defense : defenderStats.spDefense;
@@ -104,13 +112,14 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
 
   let stab = getStab(
     context.moveType,
-    context.attackerTypes,
+    effectiveAttackerTypes,
     context.attackerAbility === 'adaptability',
   );
-  // 変幻自在 / リベロ: 攻撃側のタイプが技タイプに変化するためSTABが常に付与される。
-  // 既にSTABが付いている（タイプ一致 or てきおうりょく）場合は値を上書きしない。
+  // 変幻自在 / リベロ: 変化先タイプが選択されていない場合の保険として STAB=1 → 1.5 に上書き。
+  // タイプ選択時は effectiveAttackerTypes で既に正しい STAB が計算されているため、ここでは触らない。
   if (
     stab === 1 &&
+    !context.attackerProteanType &&
     (context.attackerAbility === 'protean' || context.attackerAbility === 'libero')
   ) {
     stab = 1.5;

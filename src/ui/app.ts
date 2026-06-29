@@ -296,6 +296,7 @@ export async function initApp(root: HTMLElement) {
   addToggle('バインド', conditionForm.attackerBindCheck, atkCard);
   addToggle('ステロ', conditionForm.attackerStealthRockCheck, atkCard);
   addToggle('もらいび発動済み', conditionForm.flashFireCheck, atkCard);
+  addCondRow('変幻自在タイプ', conditionForm.proteanTypeSelect, atkCard);
   addToggle('急所を出す', conditionForm.critCheck, atkCard);
   condView.appendChild(atkCard);
   // 防御側
@@ -414,6 +415,7 @@ export async function initApp(root: HTMLElement) {
           isCritical: cond.isCritical,
           disguiseActive: cond.defenderDisguiseActive,
           attackerFlashFireActive: cond.attackerFlashFireActive,
+          attackerProteanType: cond.attackerProteanType,
         },
         typeChart: data.typeChart.chart,
       });

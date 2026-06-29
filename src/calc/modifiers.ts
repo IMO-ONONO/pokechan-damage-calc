@@ -183,6 +183,8 @@ export interface ModifierContext {
   disguiseActive?: boolean;
   // もらいびが発動済みかどうか（攻撃側がもらいび特性のとき）
   attackerFlashFireActive?: boolean;
+  // 変幻自在/リベロ 発動済み時の変化後タイプ（''=未選択）
+  attackerProteanType?: import('../data/types').PokemonType | '';
 }
 
 export interface ModifierBreakdown {
