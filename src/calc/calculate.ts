@@ -60,12 +60,19 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     return stage;
   }
 
+  // はねやすめ後のタイプを導出。flying を除いた結果が空（純ひこう単体）ならノーマル単体扱い（本編準拠）。
+  const roostFilter = (types: import('../data/types').PokemonType[]): import('../data/types').PokemonType[] => {
+    const filtered = types.filter((t) => t !== 'flying');
+    return filtered.length > 0 ? filtered : ['normal'];
+  };
   // 変幻自在/リベロ 変化後タイプが選択されている場合、攻撃側タイプをそのタイプに上書き
   const proteanActive =
     (context.attackerAbility === 'protean' || context.attackerAbility === 'libero') &&
     !!context.attackerProteanType;
   const effectiveAttackerTypes = proteanActive
     ? [context.attackerProteanType as import('../data/types').PokemonType]
+    : context.attackerRoostActive
+    ? roostFilter(context.attackerTypes)
     : context.attackerTypes;
 
   // 防御側の変幻自在/リベロ: タイプ変化後の場合、タイプ相性と天候防御補正を変化後タイプで判定
@@ -74,6 +81,8 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     !!context.defenderProteanType;
   const effectiveDefenderTypes = defenderProteanActive
     ? [context.defenderProteanType as import('../data/types').PokemonType]
+    : context.defenderRoostActive
+    ? roostFilter(context.defenderTypes)
     : context.defenderTypes;
 
   const isPhysical = context.category === 'physical';

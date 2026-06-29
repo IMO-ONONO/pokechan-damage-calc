@@ -21,6 +21,10 @@ export interface ConditionState {
   attackerProteanType: PokemonType | '';
   // 防御側の変幻自在/リベロ発動済み時の変化後タイプ（''=未選択）
   defenderProteanType: PokemonType | '';
+  // はねやすめ使用中（攻撃側）
+  attackerRoostActive: boolean;
+  // はねやすめ使用中（防御側）
+  defenderRoostActive: boolean;
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -47,6 +51,10 @@ export interface ConditionFormHandle {
   proteanTypeSelect: HTMLSelectElement;
   // 変幻自在/リベロ 変化後タイプ（防御側）
   defenderProteanTypeSelect: HTMLSelectElement;
+  // はねやすめ中（攻撃側）
+  attackerRoostCheck: HTMLInputElement;
+  // はねやすめ中（防御側）
+  defenderRoostCheck: HTMLInputElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -82,6 +90,8 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     attackerFlashFireActive: false,
     attackerProteanType: '',
     defenderProteanType: '',
+    attackerRoostActive: false,
+    defenderRoostActive: false,
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -197,6 +207,20 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     onChange();
   });
 
+  const attackerRoostCheck = document.createElement('input');
+  attackerRoostCheck.type = 'checkbox';
+  attackerRoostCheck.addEventListener('change', () => {
+    state.attackerRoostActive = attackerRoostCheck.checked;
+    onChange();
+  });
+
+  const defenderRoostCheck = document.createElement('input');
+  defenderRoostCheck.type = 'checkbox';
+  defenderRoostCheck.addEventListener('change', () => {
+    state.defenderRoostActive = defenderRoostCheck.checked;
+    onChange();
+  });
+
   // 防御側 変幻自在/リベロ 変化後タイプセレクタ（stellar を除く18タイプ）
   const defenderProteanTypeSelect = document.createElement('select');
   const defNoneOpt = document.createElement('option');
@@ -229,6 +253,8 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     flashFireCheck,
     proteanTypeSelect,
     defenderProteanTypeSelect,
+    attackerRoostCheck,
+    defenderRoostCheck,
     screenSelect,
     formatSelect,
     critCheck,

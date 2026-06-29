@@ -297,6 +297,7 @@ export async function initApp(root: HTMLElement) {
   addToggle('ステロ', conditionForm.attackerStealthRockCheck, atkCard);
   addToggle('もらいび発動済み', conditionForm.flashFireCheck, atkCard);
   addCondRow('変幻自在タイプ', conditionForm.proteanTypeSelect, atkCard);
+  addToggle('はねやすめ中', conditionForm.attackerRoostCheck, atkCard);
   addToggle('急所を出す', conditionForm.critCheck, atkCard);
   condView.appendChild(atkCard);
   // 防御側
@@ -309,6 +310,7 @@ export async function initApp(root: HTMLElement) {
   addToggle('ステロ', conditionForm.stealthRockCheck, defCard2);
   addToggle('ばけのかわ残り（ミミッキュ）', conditionForm.disguiseCheck, defCard2);
   addCondRow('変幻自在タイプ', conditionForm.defenderProteanTypeSelect, defCard2);
+  addToggle('はねやすめ中', conditionForm.defenderRoostCheck, defCard2);
   condView.appendChild(defCard2);
 
   root.appendChild(condView);
@@ -418,6 +420,8 @@ export async function initApp(root: HTMLElement) {
           attackerFlashFireActive: cond.attackerFlashFireActive,
           attackerProteanType: cond.attackerProteanType,
           defenderProteanType: cond.defenderProteanType,
+          attackerRoostActive: cond.attackerRoostActive,
+          defenderRoostActive: cond.defenderRoostActive,
         },
         typeChart: data.typeChart.chart,
       });
@@ -431,17 +435,26 @@ export async function initApp(root: HTMLElement) {
     }
 
     // スリップ表（攻防両方）。protean/libero でタイプ選択時は変化後タイプで判定。
+    // はねやすめ中は flying を除外（protean が優先）。純ひこう単体ならノーマル単体扱い。
+    const roostFilterSlip = (types: import('../data/types').PokemonType[]): import('../data/types').PokemonType[] => {
+      const filtered = types.filter((t) => t !== 'flying');
+      return filtered.length > 0 ? filtered : ['normal'];
+    };
     const atkProteanActive =
       (aState.ability === 'protean' || aState.ability === 'libero') &&
       !!cond.attackerProteanType;
     const aTypesForSlip = atkProteanActive
       ? [cond.attackerProteanType as import('../data/types').PokemonType]
+      : cond.attackerRoostActive
+      ? roostFilterSlip(aActive?.types ?? [])
       : aActive?.types ?? [];
     const defProteanActive =
       (dState.ability === 'protean' || dState.ability === 'libero') &&
       !!cond.defenderProteanType;
     const dTypesForSlip = defProteanActive
       ? [cond.defenderProteanType as import('../data/types').PokemonType]
+      : cond.defenderRoostActive
+      ? roostFilterSlip(dActive?.types ?? [])
       : dActive?.types ?? [];
     renderSlip(
       atkSlip,

@@ -190,6 +190,10 @@ export interface ModifierContext {
   attackerProteanType?: import('../data/types').PokemonType | '';
   // 防御側の変幻自在/リベロ 発動済み時の変化後タイプ（''=未選択）
   defenderProteanType?: import('../data/types').PokemonType | '';
+  // はねやすめ使用中（攻撃側）
+  attackerRoostActive?: boolean;
+  // はねやすめ使用中（防御側）
+  defenderRoostActive?: boolean;
 }
 
 export interface ModifierBreakdown {
