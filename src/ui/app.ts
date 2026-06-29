@@ -430,7 +430,19 @@ export async function initApp(root: HTMLElement) {
       });
     }
 
-    // スリップ表（攻防両方）
+    // スリップ表（攻防両方）。protean/libero でタイプ選択時は変化後タイプで判定。
+    const atkProteanActive =
+      (aState.ability === 'protean' || aState.ability === 'libero') &&
+      !!cond.attackerProteanType;
+    const aTypesForSlip = atkProteanActive
+      ? [cond.attackerProteanType as import('../data/types').PokemonType]
+      : aActive?.types ?? [];
+    const defProteanActive =
+      (dState.ability === 'protean' || dState.ability === 'libero') &&
+      !!cond.defenderProteanType;
+    const dTypesForSlip = defProteanActive
+      ? [cond.defenderProteanType as import('../data/types').PokemonType]
+      : dActive?.types ?? [];
     renderSlip(
       atkSlip,
       '攻撃側',
@@ -440,7 +452,7 @@ export async function initApp(root: HTMLElement) {
       cond.attackerLeechSeed,
       cond.attackerBind,
       cond.attackerStealthRock,
-      aActive?.types ?? [],
+      aTypesForSlip,
       cond.weather,
     );
     renderSlip(
@@ -452,7 +464,7 @@ export async function initApp(root: HTMLElement) {
       cond.defenderLeechSeed,
       cond.defenderBind,
       cond.defenderStealthRock,
-      dActive?.types ?? [],
+      dTypesForSlip,
       cond.weather,
     );
 
