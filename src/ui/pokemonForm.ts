@@ -254,11 +254,10 @@ export function createPokemonForm(
     if (key !== 'hp') {
       stageEl = document.createElement('select');
       stageEl.className = 'sg-input sg-stage-select';
-      for (let v = -6; v <= 6; v++) {
+      for (let v = 6; v >= -6; v--) {
         const opt = document.createElement('option');
         opt.value = String(v);
         opt.textContent = v > 0 ? `+${v}` : String(v);
-        if (v === 0) stageEl.value = '0';
         stageEl.appendChild(opt);
       }
       stageEl.value = '0';
