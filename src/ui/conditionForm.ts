@@ -14,6 +14,8 @@ export interface ConditionState {
   defenderStealthRock: boolean;
   // ミミッキュのばけのかわが残っている状態。trueなら全攻撃技を無効化
   defenderDisguiseActive: boolean;
+  // もらいびが発動済みかどうか（攻撃側がもらいび特性のとき）
+  attackerFlashFireActive: boolean;
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -34,6 +36,8 @@ export interface ConditionFormHandle {
   attackerStealthRockCheck: HTMLInputElement;
   // 防御側ばけのかわ（ミミッキュ）
   disguiseCheck: HTMLInputElement;
+  // 攻撃側もらいび発動済み
+  flashFireCheck: HTMLInputElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -66,6 +70,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     defenderBind: false,
     defenderStealthRock: false,
     defenderDisguiseActive: true,
+    attackerFlashFireActive: false,
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -95,6 +100,8 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
   const disguiseCheck = document.createElement('input');
   disguiseCheck.type = 'checkbox';
   disguiseCheck.checked = true;
+  const flashFireCheck = document.createElement('input');
+  flashFireCheck.type = 'checkbox';
 
   weatherSelect.addEventListener('change', () => {
     state.weather = weatherSelect.value as Weather;
@@ -152,6 +159,10 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     state.defenderDisguiseActive = disguiseCheck.checked;
     onChange();
   });
+  flashFireCheck.addEventListener('change', () => {
+    state.attackerFlashFireActive = flashFireCheck.checked;
+    onChange();
+  });
 
   return {
     weatherSelect,
@@ -165,6 +176,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     attackerBindCheck,
     attackerStealthRockCheck,
     disguiseCheck,
+    flashFireCheck,
     screenSelect,
     formatSelect,
     critCheck,

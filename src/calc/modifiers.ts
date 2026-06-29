@@ -181,6 +181,8 @@ export interface ModifierContext {
   isDefenderGrounded?: boolean;
   // ミミッキュのばけのかわが残っている状態。true なら全ての攻撃技を無効化
   disguiseActive?: boolean;
+  // もらいびが発動済みかどうか（攻撃側がもらいび特性のとき）
+  attackerFlashFireActive?: boolean;
 }
 
 export interface ModifierBreakdown {
@@ -191,6 +193,7 @@ export interface ModifierBreakdown {
   critical: number;
   burn: number;
   pinchAbility: number;
+  flashFireAbility: number;
   attackerItem: number;
   screen: number;
   spread: number;

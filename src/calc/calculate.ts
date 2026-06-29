@@ -1,5 +1,6 @@
 import type { Stats, StatStages, TypeChartData } from '../data/types';
 import {
+  getAttackerAbilityBoost,
   getDefenderAbilityHalveModifier,
   ignoresDefenderAbility,
   isAbilityImmune,
@@ -52,11 +53,30 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     typeChart,
   } = input;
 
+  // ランクを「無視」フラグ付きで適用するヘルパ。
+  // ignore=true かつ stage>0 のとき、上昇分を無視して 0 として扱う（下降は無視しない）。
+  function effectiveStage(stage: number, ignore: boolean): number {
+    if (ignore && stage > 0) return 0;
+    return stage;
+  }
+
   const isPhysical = context.category === 'physical';
   const baseAttack = isPhysical ? attackerStats.attack : attackerStats.spAttack;
   const baseDefense = isPhysical ? defenderStats.defense : defenderStats.spDefense;
-  const attackStage = isPhysical ? attackerStages.attack : attackerStages.spAttack;
-  const defenseStage = isPhysical ? defenderStages.defense : defenderStages.spDefense;
+  const rawAttackStage = isPhysical ? attackerStages.attack : attackerStages.spAttack;
+  const rawDefenseStage = isPhysical ? defenderStages.defense : defenderStages.spDefense;
+
+  // てんねん（unaware）の適用。
+  // 防御側が unaware（かつ特性が有効）なら、攻撃側の攻撃ランク上昇を無視。
+  // 攻撃側が unaware なら、防御側の防御ランク上昇を無視。
+  // かたやぶり等（ignoreAbility）が true のとき、防御側 unaware は無効化する。
+  const ignoreAbilityFlag = ignoresDefenderAbility(context.attackerAbility);
+  const defenderUnawareActive =
+    context.defenderAbility === 'unaware' && !ignoreAbilityFlag;
+  const attackerUnawareActive = context.attackerAbility === 'unaware';
+
+  const attackStage = effectiveStage(rawAttackStage, defenderUnawareActive);
+  const defenseStage = effectiveStage(rawDefenseStage, attackerUnawareActive);
 
   const effectiveAttack =
     context.isCritical && attackStage < 0
@@ -82,13 +102,12 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   // 化けの皮（ミミッキュ）または防御側特性によるタイプ無効化を判定。
   // かたやぶり等の特性無視系が攻撃側にある場合は特性無効化を貫通する（化けの皮は貫通しない）。
   const disguiseBlock = !!context.disguiseActive && context.defenderAbility === 'disguise';
-  const ignoreAbility = ignoresDefenderAbility(context.attackerAbility);
   const abilityBlock =
-    !ignoreAbility &&
+    !ignoreAbilityFlag &&
     (isAbilityImmune(context.moveType, context.defenderAbility) ||
       isSoundproofImmune(context.defenderAbility, context.moveName));
   const baseTypeEff = getTypeMultiplier(context.moveType, context.defenderTypes, typeChart);
-  const halveMod = ignoreAbility
+  const halveMod = ignoreAbilityFlag
     ? 1
     : getDefenderAbilityHalveModifier(
         context.moveType,
@@ -115,6 +134,11 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     context.moveType,
     context.attackerHpRatio,
   );
+  const flashFireAbility = getAttackerAbilityBoost(
+    context.attackerAbility,
+    context.moveType,
+    context.attackerFlashFireActive ?? false,
+  );
   const attackerItem = getAttackerItemModifier(
     context.attackerItem,
     context.moveType,
@@ -130,7 +154,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   const spread = getSpreadModifier(context.moveTarget, context.format);
 
   // 本編準拠の sequential floor で適用するため、modifier を列で渡す。
-  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → アイテム → 壁 → 範囲技
+  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → もらいび → アイテム → 壁 → 範囲技
   const modifierList = [
     stab,
     typeEffectiveness,
@@ -139,6 +163,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     critical,
     burn,
     pinchAbility,
+    flashFireAbility,
     attackerItem,
     screen,
     spread,
@@ -151,6 +176,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     critical *
     burn *
     pinchAbility *
+    flashFireAbility *
     attackerItem *
     screen *
     spread;
@@ -175,6 +201,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
       critical,
       burn,
       pinchAbility,
+      flashFireAbility,
       attackerItem,
       screen,
       spread,

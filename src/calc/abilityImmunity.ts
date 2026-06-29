@@ -73,6 +73,17 @@ export function isSoundproofImmune(
   return ability === 'soundproof' && isSoundMove(moveName);
 }
 
+// 攻撃側特性によるダメージ倍率。
+// もらいび（flash-fire）: 発動済みのとき、ほのお技ダメージ ×1.5。
+export function getAttackerAbilityBoost(
+  attackerAbility: string | undefined,
+  moveType: import('../data/types').PokemonType,
+  flashFireActive: boolean,
+): number {
+  if (attackerAbility === 'flash-fire' && flashFireActive && moveType === 'fire') return 1.5;
+  return 1;
+}
+
 // 防御側特性によるタイプ半減（無効ではない）。
 // あついしぼう（thick-fat）: ほのお/こおり 0.5倍
 // プリズムアーマー / フィルター / ハードロック: 効果バツグンを 0.75倍（攻撃側の弱点突きを軽減）
