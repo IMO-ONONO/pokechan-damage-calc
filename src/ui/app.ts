@@ -308,6 +308,7 @@ export async function initApp(root: HTMLElement) {
   addToggle('バインド', conditionForm.bindCheck, defCard2);
   addToggle('ステロ', conditionForm.stealthRockCheck, defCard2);
   addToggle('ばけのかわ残り（ミミッキュ）', conditionForm.disguiseCheck, defCard2);
+  addCondRow('変幻自在タイプ', conditionForm.defenderProteanTypeSelect, defCard2);
   condView.appendChild(defCard2);
 
   root.appendChild(condView);
@@ -416,6 +417,7 @@ export async function initApp(root: HTMLElement) {
           disguiseActive: cond.defenderDisguiseActive,
           attackerFlashFireActive: cond.attackerFlashFireActive,
           attackerProteanType: cond.attackerProteanType,
+          defenderProteanType: cond.defenderProteanType,
         },
         typeChart: data.typeChart.chart,
       });

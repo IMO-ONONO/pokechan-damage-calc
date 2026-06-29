@@ -19,6 +19,8 @@ export interface ConditionState {
   attackerFlashFireActive: boolean;
   // 変幻自在/リベロ発動済み時の変化後タイプ（''=未選択）
   attackerProteanType: PokemonType | '';
+  // 防御側の変幻自在/リベロ発動済み時の変化後タイプ（''=未選択）
+  defenderProteanType: PokemonType | '';
   screen: Screen;
   format: BattleFormat;
   isCritical: boolean;
@@ -41,8 +43,10 @@ export interface ConditionFormHandle {
   disguiseCheck: HTMLInputElement;
   // 攻撃側もらいび発動済み
   flashFireCheck: HTMLInputElement;
-  // 変幻自在/リベロ 変化後タイプ
+  // 変幻自在/リベロ 変化後タイプ（攻撃側）
   proteanTypeSelect: HTMLSelectElement;
+  // 変幻自在/リベロ 変化後タイプ（防御側）
+  defenderProteanTypeSelect: HTMLSelectElement;
   screenSelect: HTMLSelectElement;
   formatSelect: HTMLSelectElement;
   critCheck: HTMLInputElement;
@@ -77,6 +81,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     defenderDisguiseActive: true,
     attackerFlashFireActive: false,
     attackerProteanType: '',
+    defenderProteanType: '',
     screen: 'none',
     format: 'single',
     isCritical: false,
@@ -192,6 +197,23 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     onChange();
   });
 
+  // 防御側 変幻自在/リベロ 変化後タイプセレクタ（stellar を除く18タイプ）
+  const defenderProteanTypeSelect = document.createElement('select');
+  const defNoneOpt = document.createElement('option');
+  defNoneOpt.value = '';
+  defNoneOpt.textContent = 'なし';
+  defenderProteanTypeSelect.appendChild(defNoneOpt);
+  for (const t of PROTEAN_TYPES) {
+    const opt = document.createElement('option');
+    opt.value = t;
+    opt.textContent = TYPE_COLORS[t].ja;
+    defenderProteanTypeSelect.appendChild(opt);
+  }
+  defenderProteanTypeSelect.addEventListener('change', () => {
+    state.defenderProteanType = defenderProteanTypeSelect.value as PokemonType | '';
+    onChange();
+  });
+
   return {
     weatherSelect,
     fieldSelect,
@@ -206,6 +228,7 @@ export function createConditionForm(onChange: () => void): ConditionFormHandle {
     disguiseCheck,
     flashFireCheck,
     proteanTypeSelect,
+    defenderProteanTypeSelect,
     screenSelect,
     formatSelect,
     critCheck,

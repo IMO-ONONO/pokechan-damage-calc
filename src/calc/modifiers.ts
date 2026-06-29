@@ -185,6 +185,8 @@ export interface ModifierContext {
   attackerFlashFireActive?: boolean;
   // 変幻自在/リベロ 発動済み時の変化後タイプ（''=未選択）
   attackerProteanType?: import('../data/types').PokemonType | '';
+  // 防御側の変幻自在/リベロ 発動済み時の変化後タイプ（''=未選択）
+  defenderProteanType?: import('../data/types').PokemonType | '';
 }
 
 export interface ModifierBreakdown {

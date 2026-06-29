@@ -68,6 +68,14 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     ? [context.attackerProteanType as import('../data/types').PokemonType]
     : context.attackerTypes;
 
+  // 防御側の変幻自在/リベロ: タイプ変化後の場合、タイプ相性と天候防御補正を変化後タイプで判定
+  const defenderProteanActive =
+    (context.defenderAbility === 'protean' || context.defenderAbility === 'libero') &&
+    !!context.defenderProteanType;
+  const effectiveDefenderTypes = defenderProteanActive
+    ? [context.defenderProteanType as import('../data/types').PokemonType]
+    : context.defenderTypes;
+
   const isPhysical = context.category === 'physical';
   const baseAttack = isPhysical ? attackerStats.attack : attackerStats.spAttack;
   const baseDefense = isPhysical ? defenderStats.defense : defenderStats.spDefense;
@@ -105,7 +113,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   // 砂嵐(いわ特防×1.5) / 雪(こおり防御×1.5) を防御値に適用
   const weatherDefMod = getWeatherDefenseModifier(
     context.weather,
-    context.defenderTypes,
+    effectiveDefenderTypes,
     context.category,
   );
   const effectiveDefense = Math.floor(stagedDefense * weatherDefMod);
@@ -124,7 +132,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     !ignoreAbilityFlag &&
     (isAbilityImmune(context.moveType, context.defenderAbility) ||
       isSoundproofImmune(context.defenderAbility, context.moveName));
-  const baseTypeEff = getTypeMultiplier(context.moveType, context.defenderTypes, typeChart);
+  const baseTypeEff = getTypeMultiplier(context.moveType, effectiveDefenderTypes, typeChart);
   const halveMod = ignoreAbilityFlag
     ? 1
     : getDefenderAbilityHalveModifier(
