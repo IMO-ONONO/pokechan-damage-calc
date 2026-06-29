@@ -3,7 +3,8 @@ export interface DamageParams {
   movePower: number;
   attack: number;
   defense: number;
-  modifiers: number;
+  // 本編準拠の sequential floor で適用する modifier の列。1要素でも 0 を含む場合は全体ダメージ 0。
+  modifierList: number[];
 }
 
 export interface DamageRange {
@@ -12,27 +13,27 @@ export interface DamageRange {
   max: number;
 }
 
-export function calculateBaseDamage(p: DamageParams): number {
+export function calculateBaseDamage(p: { level: number; movePower: number; attack: number; defense: number }): number {
   const a = Math.floor((2 * p.level) / 5) + 2;
   const b = Math.floor((a * p.movePower * p.attack) / p.defense);
   return Math.floor(b / 50) + 2;
 }
 
-export function applyModifiersAndRoll(
-  base: number,
-  modifiers: number,
-  randPercent: number,
-): number {
-  if (modifiers === 0) return 0;
-  const withMod = Math.floor(base * modifiers);
-  return Math.max(1, Math.floor((withMod * randPercent) / 100));
-}
-
 export function calculateDamageRange(p: DamageParams): DamageRange {
   const base = calculateBaseDamage(p);
+  const hasZero = p.modifierList.some((m) => m === 0);
   const rolls: number[] = [];
   for (let r = 85; r <= 100; r++) {
-    rolls.push(applyModifiersAndRoll(base, p.modifiers, r));
+    if (hasZero) {
+      rolls.push(0);
+      continue;
+    }
+    // 本編準拠: ランダム → STAB → タイプ相性 → 天候 → ... の順で各乗算ごとに floor
+    let d = Math.floor((base * r) / 100);
+    for (const m of p.modifierList) {
+      d = Math.floor(d * m);
+    }
+    rolls.push(Math.max(1, d));
   }
   return { rolls, min: rolls[0], max: rolls[rolls.length - 1] };
 }

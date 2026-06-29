@@ -247,19 +247,31 @@ export function createMoveSlot(
     dmgNums.textContent = `${min}〜${max}`;
     dmgPct.textContent = `${((min / defenderMaxHp) * 100).toFixed(1)}〜${((max / defenderMaxHp) * 100).toFixed(1)}%`;
 
-    // 確定発数
+    // 確定発数＋確率併記。
+    // 1発KO は rolls 16 個のうち HP 以上に届く個数を 16 で割って算出。
+    // 2発以上の乱数のときは「best 発で倒せる確率（必要発数=best が出るロール数 / 16）」を出す。
     const currentHp = defenderCurrentHp;
     if (max <= 0) {
       dmgKo.textContent = '無効';
     } else {
-      const worst = Math.ceil(currentHp / min);
-      const best = Math.ceil(currentHp / max);
-      if (best <= 0) {
+      const rolls = result.damageRange.rolls;
+      const oneShotKo = rolls.filter((d) => d >= currentHp).length;
+      if (oneShotKo === rolls.length) {
         dmgKo.textContent = '確定1発';
-      } else if (best === worst) {
-        dmgKo.textContent = `確定${best}発`;
+      } else if (oneShotKo > 0) {
+        const pct = ((oneShotKo / rolls.length) * 100).toFixed(2);
+        dmgKo.textContent = `乱数1発（${pct}%）`;
       } else {
-        dmgKo.textContent = `乱数${best}〜${worst}発`;
+        const needs = rolls.map((d) => Math.ceil(currentHp / d));
+        const best = Math.min(...needs);
+        const worst = Math.max(...needs);
+        if (best === worst) {
+          dmgKo.textContent = `確定${best}発`;
+        } else {
+          const bestCount = needs.filter((n) => n === best).length;
+          const pct = ((bestCount / rolls.length) * 100).toFixed(2);
+          dmgKo.textContent = `乱数${best}〜${worst}発（${pct}%）`;
+        }
       }
     }
   }

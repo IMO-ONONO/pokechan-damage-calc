@@ -129,6 +129,20 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   );
   const spread = getSpreadModifier(context.moveTarget, context.format);
 
+  // 本編準拠の sequential floor で適用するため、modifier を列で渡す。
+  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → アイテム → 壁 → 範囲技
+  const modifierList = [
+    stab,
+    typeEffectiveness,
+    weather,
+    field,
+    critical,
+    burn,
+    pinchAbility,
+    attackerItem,
+    screen,
+    spread,
+  ];
   const total =
     stab *
     typeEffectiveness *
@@ -146,7 +160,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     movePower,
     attack: effectiveAttack,
     defense: effectiveDefense,
-    modifiers: total,
+    modifierList,
   });
 
   return {
