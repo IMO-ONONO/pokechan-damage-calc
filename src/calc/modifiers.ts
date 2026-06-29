@@ -92,7 +92,10 @@ export function getBurnModifier(
   attackerStatus: Status,
   category: MoveCategory,
   attackerAbility?: string,
+  attackerTypes?: PokemonType[],
 ): number {
+  // ほのおタイプはやけど無効（攻撃半減なし）
+  if (attackerTypes?.includes('fire')) return 1;
   if (
     attackerStatus === 'burn' &&
     category === 'physical' &&

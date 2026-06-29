@@ -506,6 +506,20 @@ export async function initApp(root: HTMLElement) {
       poison: 'どく(1/8)',
       badpoison: 'もうどく(累積)',
     };
+
+    // タイプ無効判定：元の引数を上書きせずローカル変数で管理
+    // やどりぎ → くさタイプ無効
+    const effectiveLeechSeed = leechSeed && !types.includes('grass');
+    // やけど → ほのおタイプ無効
+    const effectiveStatus =
+      status === 'burn' && types.includes('fire')
+        ? 'none'
+        : // どく・もうどく → どく・はがねタイプ無効
+        (status === 'poison' || status === 'badpoison') &&
+          (types.includes('poison') || types.includes('steel'))
+        ? 'none'
+        : status;
+
     let stealthDmg = 0;
     let stealthMult = 1;
     if (stealthRock && types.length > 0) {
@@ -514,8 +528,8 @@ export async function initApp(root: HTMLElement) {
     }
     const sandSlip = isWeatherSlipped(weather, types);
     const parts: string[] = [];
-    if (statusLabels[status]) parts.push(statusLabels[status]);
-    if (leechSeed) parts.push('やどりぎ(1/8)');
+    if (statusLabels[effectiveStatus]) parts.push(statusLabels[effectiveStatus]);
+    if (effectiveLeechSeed) parts.push('やどりぎ(1/8)');
     if (bind) parts.push('バインド(1/8)');
     if (stealthRock) parts.push(`ステロ(${stealthMult}×)`);
     if (sandSlip) parts.push('砂嵐(1/16)');
@@ -534,12 +548,12 @@ export async function initApp(root: HTMLElement) {
 
     function damageAtTurn(n: number): number {
       let acc = stealthRock ? stealthDmg : 0;
-      if (status === 'burn') acc += burnTick * n;
-      else if (status === 'poison') acc += eighth * n;
-      else if (status === 'badpoison') {
+      if (effectiveStatus === 'burn') acc += burnTick * n;
+      else if (effectiveStatus === 'poison') acc += eighth * n;
+      else if (effectiveStatus === 'badpoison') {
         for (let i = 1; i <= n; i++) acc += Math.floor((maxHp * i) / 16);
       }
-      if (leechSeed) acc += eighth * n;
+      if (effectiveLeechSeed) acc += eighth * n;
       if (bind) acc += eighth * n;
       if (sandSlip) acc += burnTick * n;
       return acc;

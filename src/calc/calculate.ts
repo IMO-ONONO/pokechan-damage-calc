@@ -154,6 +154,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     context.attackerStatus,
     context.category,
     context.attackerAbility,
+    effectiveAttackerTypes,
   );
   const pinchAbility = getPinchAbilityModifier(
     context.attackerAbility,
