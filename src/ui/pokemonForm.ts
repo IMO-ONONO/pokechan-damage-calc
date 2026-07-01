@@ -393,14 +393,23 @@ export function createPokemonForm(
       itList.style.display = 'none';
       return;
     }
-    const matches = ITEM_LIST.filter((i) => i.nameJa.includes(query)).slice(0, 8);
+    const matches = ITEM_LIST.filter(
+      (i) => i.nameJa.includes(query) || i.effect.includes(query),
+    ).slice(0, 8);
     if (matches.length === 0) {
       itList.style.display = 'none';
       return;
     }
     for (const entry of matches) {
       const li = document.createElement('li');
-      li.textContent = entry.nameJa;
+      const name = document.createElement('span');
+      name.className = 'suggest-name';
+      name.textContent = entry.nameJa;
+      li.appendChild(name);
+      const effect = document.createElement('span');
+      effect.className = 'muted';
+      effect.textContent = entry.effect;
+      li.appendChild(effect);
       li.addEventListener('mousedown', (e) => {
         e.preventDefault();
         selectItem(entry);
