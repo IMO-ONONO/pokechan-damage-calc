@@ -87,9 +87,25 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     : context.defenderTypes;
 
   const isPhysical = context.category === 'physical';
-  const baseAttack = isPhysical ? attackerStats.attack : attackerStats.spAttack;
+  // イカサマ：物理技だが「防御側」のA実数値・Aランクを参照する特殊技。
+  // ボディプレス：物理技だが攻撃側の「防御」実数値・防御ランクを参照する特殊技。
+  const isFoulPlay = context.moveName === 'foul-play';
+  const isBodyPress = context.moveName === 'body-press';
+  const baseAttack = isFoulPlay
+    ? defenderStats.attack
+    : isBodyPress
+    ? attackerStats.defense
+    : isPhysical
+    ? attackerStats.attack
+    : attackerStats.spAttack;
   const baseDefense = isPhysical ? defenderStats.defense : defenderStats.spDefense;
-  const rawAttackStage = isPhysical ? attackerStages.attack : attackerStages.spAttack;
+  const rawAttackStage = isFoulPlay
+    ? defenderStages.attack
+    : isBodyPress
+    ? attackerStages.defense
+    : isPhysical
+    ? attackerStages.attack
+    : attackerStages.spAttack;
   const rawDefenseStage = isPhysical ? defenderStages.defense : defenderStages.spDefense;
 
   // てんねん（unaware）の適用。
@@ -110,11 +126,12 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
       : applyStatStage(baseAttack, attackStage);
   // ちからもち（huge-power）／ヨガパワー（pure-power）は攻撃実数値を2倍にする本編仕様。
   // sequential floor のBase damage計算前に反映するため、effectiveAttack を倍にする。
-  if (
-    context.category === 'physical' &&
-    (context.attackerAbility === 'huge-power' || context.attackerAbility === 'pure-power')
-  ) {
-    effectiveAttack *= 2;
+  // ボディプレスはA参照ではないため対象外。イカサマは参照元が防御側になるため防御側特性で判定する。
+  if (context.category === 'physical' && !isBodyPress) {
+    const hugePowerAbility = isFoulPlay ? context.defenderAbility : context.attackerAbility;
+    if (hugePowerAbility === 'huge-power' || hugePowerAbility === 'pure-power') {
+      effectiveAttack *= 2;
+    }
   }
   const stagedDefense =
     context.isCritical && defenseStage > 0
