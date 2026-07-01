@@ -11,6 +11,7 @@ import {
   getAttackerItemModifier,
   getBurnModifier,
   getCriticalModifier,
+  getDefenderItemModifier,
   getFieldModifier,
   getPinchAbilityModifier,
   getScreenModifier,
@@ -182,6 +183,11 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     context.category,
     typeEffectiveness > 1,
   );
+  const defenderItem = getDefenderItemModifier(
+    context.defenderItem,
+    context.moveType,
+    typeEffectiveness,
+  );
   const screen = getScreenModifier(
     context.screen,
     context.category,
@@ -191,7 +197,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
   const spread = getSpreadModifier(context.moveTarget, context.format);
 
   // 本編準拠の sequential floor で適用するため、modifier を列で渡す。
-  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → 攻撃特性ブースト → アイテム → 壁 → 範囲技
+  // 順序：STAB → タイプ相性 → 天候 → フィールド → 急所 → やけど → ピンチ特性 → 攻撃特性ブースト → 攻撃側アイテム → 防御側アイテム(半減きのみ) → 壁 → 範囲技
   const modifierList = [
     stab,
     typeEffectiveness,
@@ -202,6 +208,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     pinchAbility,
     attackerAbilityBoost,
     attackerItem,
+    defenderItem,
     screen,
     spread,
   ];
@@ -215,6 +222,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
     pinchAbility *
     attackerAbilityBoost *
     attackerItem *
+    defenderItem *
     screen *
     spread;
 
@@ -240,6 +248,7 @@ export function calculateFullDamage(input: FullDamageInput): FullDamageResult {
       pinchAbility,
       attackerAbilityBoost,
       attackerItem,
+      defenderItem,
       screen,
       spread,
       total,

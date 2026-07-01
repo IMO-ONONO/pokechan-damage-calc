@@ -3,6 +3,7 @@ import { isPickablePokemon, type GameData } from '../data/loader';
 import { savedToState, type SavedPokemon } from '../data/savedPokemon';
 import type { EVs, IVs, Nature, PokemonData, Stats, StatStages } from '../data/types';
 import { NATURES, STAGE_KEYS, STAT_KEYS } from './constants';
+import { ITEM_BY_NAME, ITEM_LIST } from './itemList';
 import { openLoadPanel } from './savedPokemonPanel';
 import { buildTypePillBackground, pickFgForTypes } from './typeColors';
 
@@ -200,11 +201,22 @@ export function createPokemonForm(
   const abSelect = document.createElement('select');
   wrap.appendChild(abSelect);
 
-  // 持ち物 input
+  // 持ち物 input + オートコンプリート
+  const itSugWrap = document.createElement('div');
+  itSugWrap.className = 'suggest-wrap';
+
   const itInput = document.createElement('input');
   itInput.type = 'text';
   itInput.placeholder = '持ち物';
-  wrap.appendChild(itInput);
+  itInput.autocomplete = 'off';
+  itSugWrap.appendChild(itInput);
+
+  const itList = document.createElement('ul');
+  itList.className = 'suggest-list';
+  itList.style.display = 'none';
+  itSugWrap.appendChild(itList);
+
+  wrap.appendChild(itSugWrap);
 
   // HP割合
   const hpRow = document.createElement('div');
@@ -365,6 +377,39 @@ export function createPokemonForm(
     nameChip.style.color = pickFgForTypes(active.types);
   }
 
+  // ── 持ち物オートコンプリート ──
+  function selectItem(entry: (typeof ITEM_LIST)[number]) {
+    state.item = entry.name;
+    itInput.value = entry.nameJa;
+    itList.innerHTML = '';
+    itList.style.display = 'none';
+    onChange();
+  }
+
+  function renderItemSuggestions(q: string) {
+    itList.innerHTML = '';
+    const query = q.trim();
+    if (!query) {
+      itList.style.display = 'none';
+      return;
+    }
+    const matches = ITEM_LIST.filter((i) => i.nameJa.includes(query)).slice(0, 8);
+    if (matches.length === 0) {
+      itList.style.display = 'none';
+      return;
+    }
+    for (const entry of matches) {
+      const li = document.createElement('li');
+      li.textContent = entry.nameJa;
+      li.addEventListener('mousedown', (e) => {
+        e.preventDefault();
+        selectItem(entry);
+      });
+      itList.appendChild(li);
+    }
+    itList.style.display = '';
+  }
+
   // ── イベント ──
   pokeInput.addEventListener('change', () => {
     const v = pokeInput.value.trim();
@@ -406,9 +451,19 @@ export function createPokemonForm(
     state.ability = abSelect.value;
     onChange();
   });
-  itInput.addEventListener('change', () => {
-    state.item = itInput.value.trim();
+  itInput.addEventListener('input', () => {
+    const v = itInput.value.trim();
+    // 候補一覧に完全一致する日本語名があれば内部名を確定、無ければ空扱い（既存の自由入力挙動を維持しつつ内部名を保つ）
+    const exact = ITEM_LIST.find((i) => i.nameJa === v);
+    state.item = exact ? exact.name : '';
+    renderItemSuggestions(itInput.value);
     onChange();
+  });
+  itInput.addEventListener('focus', () => renderItemSuggestions(itInput.value));
+  itInput.addEventListener('blur', () => {
+    window.setTimeout(() => {
+      itList.style.display = 'none';
+    }, 150);
   });
   hpInput.addEventListener('change', () => {
     state.hpRatio = Math.max(1, Math.min(100, parseInt(hpInput.value, 10) || 100)) / 100;
@@ -431,7 +486,7 @@ export function createPokemonForm(
     pokeInput.value = s.pokemon?.displayJa ?? s.pokemon?.nameJa ?? s.pokemon?.name ?? '';
     lvInput.value = String(s.level);
     natSelect.value = s.nature;
-    itInput.value = s.item;
+    itInput.value = ITEM_BY_NAME.get(s.item)?.nameJa ?? s.item;
     hpInput.value = String(Math.round(s.hpRatio * 100));
 
     // statCells IV/EV/Stage

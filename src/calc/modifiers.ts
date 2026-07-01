@@ -161,6 +161,40 @@ export function getAttackerItemModifier(
   return 1;
 }
 
+const HALVE_BERRY: Record<string, PokemonType> = {
+  'occa-berry': 'fire',
+  'passho-berry': 'water',
+  'wacan-berry': 'electric',
+  'rindo-berry': 'grass',
+  'yache-berry': 'ice',
+  'chople-berry': 'fighting',
+  'kebia-berry': 'poison',
+  'shuca-berry': 'ground',
+  'coba-berry': 'flying',
+  'payapa-berry': 'psychic',
+  'tanga-berry': 'bug',
+  'charti-berry': 'rock',
+  'kasib-berry': 'ghost',
+  'haban-berry': 'dragon',
+  'colbur-berry': 'dark',
+  'babiri-berry': 'steel',
+  'roseli-berry': 'fairy',
+};
+
+// 半減きのみ：技タイプが対応タイプかつ効果バツグン(typeEffectiveness > 1)で ×0.5。
+// chilan-berry：ノーマル技のみ効果関係なく×0.5。
+export function getDefenderItemModifier(
+  item: string | undefined,
+  moveType: PokemonType,
+  typeEffectiveness: number,
+): number {
+  if (!item) return 1;
+  if (item === 'chilan-berry' && moveType === 'normal') return 0.5;
+  const berryType = HALVE_BERRY[item];
+  if (berryType && berryType === moveType && typeEffectiveness > 1) return 0.5;
+  return 1;
+}
+
 export interface ModifierContext {
   moveType: PokemonType;
   category: MoveCategory;
@@ -206,6 +240,7 @@ export interface ModifierBreakdown {
   pinchAbility: number;
   attackerAbilityBoost: number;
   attackerItem: number;
+  defenderItem: number;
   screen: number;
   spread: number;
   total: number;
